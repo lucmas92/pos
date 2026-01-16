@@ -37,10 +37,14 @@ const isOutOfStock = computed(() => props.product.quantity_available === 0)
 
 const hasVariants = computed(() => props.product.variants && props.product.variants.length > 0)
 
+// Un prodotto richiede il modale se ha varianti OPPURE se è un kit (per vedere cosa contiene) OPPURE se vogliamo sempre permettere di aggiungere note/quantità
+const requiresModal = computed(() => hasVariants.value || props.product.is_kit)
+
 function handleAddToCart() {
   if (isOutOfStock.value) return
 
-  if (hasVariants.value && !selectedVariant.value) {
+  if (requiresModal.value && !selectedVariant.value && hasVariants.value) {
+    // Se ha varianti, deve selezionarne una
     showVariants.value = true
     return
   }
@@ -56,12 +60,10 @@ function handleAddToCart() {
 
 function handleQuickAdd() {
   if (isOutOfStock.value) return
-  if (hasVariants.value) {
-    showVariants.value = true
-    return
-  }
 
-  emit('add-to-cart', props.product, undefined, undefined, 1)
+  // Apri sempre il modale per permettere di scegliere quantità e note,
+  // specialmente per i kit o prodotti con varianti
+  showVariants.value = true
 }
 
 function incrementQuantity() {
@@ -80,7 +82,7 @@ function decrementQuantity() {
 <template>
   <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col h-full transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
     <!-- Image -->
-    <div class="relative h-48 bg-gray-100 overflow-hidden group">
+    <div class="relative h-48 bg-gray-100 overflow-hidden group cursor-pointer" @click="handleQuickAdd">
       <img
         v-if="product.image_url"
         :src="product.image_url"
@@ -116,7 +118,7 @@ function decrementQuantity() {
 
     <!-- Content -->
     <div class="p-5 flex-1 flex flex-col">
-      <div class="flex-1">
+      <div class="flex-1 cursor-pointer" @click="handleQuickAdd">
         <h3 class="text-lg font-bold text-gray-900 mb-1 leading-tight">
           {{ product.name }}
         </h3>
@@ -124,15 +126,21 @@ function decrementQuantity() {
           {{ product.description }}
         </p>
 
-        <!-- Kit items preview -->
-        <div v-if="product.is_kit && product.kit_items" class="mb-3 p-2 bg-gray-50 rounded-lg border border-gray-100">
-          <p class="text-xs font-bold text-gray-700 mb-1">Include:</p>
-          <ul class="text-xs text-gray-600 space-y-0.5">
-            <li v-for="item in product.kit_items" :key="item.id" class="flex items-center">
-              <span class="w-1 h-1 bg-gray-400 rounded-full mr-1.5"></span>
-              {{ item.product?.name }} (x{{ item.quantity }})
-            </li>
-          </ul>
+        <!-- Kit items preview (small) -->
+        <div v-if="product.is_kit && product.kit_items && product.kit_items.length > 0" class="mb-3">
+          <p class="text-xs text-gray-500 font-medium mb-1">Include:</p>
+          <div class="flex flex-wrap gap-1">
+            <span
+              v-for="item in product.kit_items.slice(0, 3)"
+              :key="item.id"
+              class="text-xs bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded"
+            >
+              {{ item.product?.name }}
+            </span>
+            <span v-if="product.kit_items.length > 3" class="text-xs text-gray-400 px-1">
+              +{{ product.kit_items.length - 3 }}
+            </span>
+          </div>
         </div>
       </div>
 
@@ -164,9 +172,26 @@ function decrementQuantity() {
       </div>
     </div>
 
-    <!-- Variants Modal -->
+    <!-- Variants / Details Modal -->
     <AppModal :isOpen="showVariants" @close="showVariants = false" :title="product.name">
       <div class="space-y-6">
+        <!-- Description -->
+        <p v-if="product.description" class="text-gray-600 text-sm">
+          {{ product.description }}
+        </p>
+
+        <!-- Kit Details -->
+        <div v-if="product.is_kit && product.kit_items && product.kit_items.length > 0" class="bg-purple-50 p-4 rounded-xl border border-purple-100">
+          <h4 class="font-bold text-purple-900 mb-2 text-sm">Il menu include:</h4>
+          <ul class="space-y-2">
+            <li v-for="item in product.kit_items" :key="item.id" class="flex items-center text-sm text-purple-800">
+              <span class="w-1.5 h-1.5 bg-purple-400 rounded-full mr-2"></span>
+              <span class="font-bold mr-1">{{ item.quantity }}x</span>
+              {{ item.product?.name }}
+            </li>
+          </ul>
+        </div>
+
         <!-- Variants -->
         <div v-if="hasVariants">
           <label class="block text-sm font-bold text-gray-700 mb-3">Scegli una variante</label>
