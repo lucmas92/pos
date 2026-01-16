@@ -88,6 +88,10 @@ function goToManager() {
   router.push('/manager/dashboard')
 }
 
+function goToMyOrders() {
+  router.push('/my-orders')
+}
+
 // Lifecycle
 onMounted(() => {
   cart.initialize()
@@ -112,11 +116,22 @@ onMounted(() => {
             </div>
             <div>
               <h1 class="text-lg font-bold text-gray-900 leading-none">Proloco</h1>
-              <p class="text-xs text-gray-500 font-medium mt-1">Fiera del Soco</p>
+              <p class="text-xs text-gray-500 font-medium mt-1">Sagra Paesana</p>
             </div>
           </div>
 
           <div class="flex items-center space-x-3">
+            <!-- My Orders Button -->
+            <button
+              @click="goToMyOrders"
+              class="hidden md:flex items-center px-4 py-2 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-xl font-medium transition-colors"
+            >
+              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+              </svg>
+              I Miei Ordini
+            </button>
+
             <!-- Manager Button (Visible only if authenticated) -->
             <button
               v-if="auth.isAuthenticated.value"
@@ -225,6 +240,16 @@ onMounted(() => {
 
     <!-- Floating Action Button (mobile only) -->
     <div class="fixed bottom-6 right-6 z-30 flex flex-col gap-3 md:hidden safe-area-inset-bottom">
+      <!-- My Orders FAB -->
+      <button
+        @click="goToMyOrders"
+        class="bg-white text-gray-700 border border-gray-200 rounded-full p-4 shadow-lg hover:bg-gray-50 transition-transform active:scale-95 flex items-center justify-center"
+      >
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+        </svg>
+      </button>
+
       <!-- Manager FAB (Visible only if authenticated) -->
       <button
         v-if="auth.isAuthenticated.value"

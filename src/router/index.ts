@@ -23,6 +23,12 @@ const router = createRouter({
       component: () => import('@/views/guest/OrderSuccessView.vue'),
       meta: { layout: 'guest' },
     },
+    {
+      path: '/my-orders',
+      name: 'my-orders',
+      component: () => import('@/views/guest/MyOrdersView.vue'),
+      meta: { layout: 'guest' },
+    },
 
     // Manager routes - usano DefaultLayout per login, ManagerLayout per il resto
     {
