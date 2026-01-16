@@ -183,6 +183,13 @@ async function addProductToKit(product: Product) {
 
   loading.value = true
   try {
+    // Verifica se il prodotto è già nel kit (controllo locale per sicurezza)
+    const exists = kitItemsList.value.some(item => item.included_product_id === product.id)
+    if (exists) {
+      console.warn('Prodotto già presente nel kit')
+      return
+    }
+
     const result = await products.kits.addItem(props.product.id, product.id, 1)
     if (result.success && result.data) {
       kitItemsList.value.push(result.data)
