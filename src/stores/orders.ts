@@ -4,6 +4,7 @@ import { supabase, handleSupabaseError } from '@/utils/supabase'
 import type { Order } from '@/types/models'
 import type { RealtimeChannel } from '@supabase/supabase-js'
 import { getStartOfDay, getEndOfDay } from '@/utils/date'
+import { useAudit } from '@/composables/useAudit'
 
 export const useOrdersStore = defineStore('orders', () => {
   const orders = ref<Order[]>([])
@@ -11,6 +12,8 @@ export const useOrdersStore = defineStore('orders', () => {
   const loading = ref(false)
   const error = ref<string | null>(null)
   const realtimeChannel = ref<RealtimeChannel | null>(null)
+
+  const { logAction } = useAudit()
 
   // Computed
   const pendingOrders = computed(() => orders.value.filter((o) => o.status === 'pending'))
@@ -287,6 +290,9 @@ export const useOrdersStore = defineStore('orders', () => {
       currentOrder.value = fullOrder
       orders.value.unshift(fullOrder)
 
+      // Audit (opzionale, se vogliamo tracciare anche gli ordini creati dagli ospiti, ma user_id sarà null)
+      // await logAction('CREATE_ORDER', 'order', order.id, { total: order.total_amount })
+
       return { success: true, data: fullOrder }
     } catch (err: any) {
       error.value = handleSupabaseError(err)
@@ -299,13 +305,12 @@ export const useOrdersStore = defineStore('orders', () => {
   /**
    * Aggiorna lo stato di un ordine
    */
-  async function updateOrderStatus(
-    id: string,
-    status: 'pending' | 'paid' | 'completed' | 'cancelled',
-  ) {
+  async function updateOrderStatus(id: string, status: 'pending' | 'paid' | 'completed' | 'cancelled') {
     try {
       loading.value = true
       error.value = null
+
+      const oldOrder = orders.value.find(o => o.id === id)
 
       const updateData: any = { status }
 
@@ -339,6 +344,13 @@ export const useOrdersStore = defineStore('orders', () => {
       if (currentOrder.value?.id === id) {
         currentOrder.value = data
       }
+
+      // Audit
+      await logAction('UPDATE_ORDER_STATUS', 'order', id, {
+        old_status: oldOrder?.status,
+        new_status: status,
+        order_number: data.order_number
+      })
 
       return { success: true, data }
     } catch (err: any) {

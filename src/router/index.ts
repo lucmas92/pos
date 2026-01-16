@@ -72,6 +72,12 @@ const router = createRouter({
       component: () => import('@/views/manager/KitchenView.vue'),
       meta: { requiresAuth: true, layout: 'manager' },
     },
+    {
+      path: '/manager/audit',
+      name: 'manager-audit',
+      component: () => import('@/views/manager/AuditView.vue'),
+      meta: { requiresAuth: true, layout: 'manager' },
+    },
 
     // 404 - usa DefaultLayout
     {

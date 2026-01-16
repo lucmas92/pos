@@ -14,13 +14,27 @@ export type OrderBase = Database['public']['Tables']['orders']['Row']
 export type OrderItemBase = Database['public']['Tables']['order_items']['Row']
 
 /**
+ * Audit Log
+ */
+export interface AuditLog {
+  id: string
+  created_at: string
+  user_id: string | null
+  user_email: string | null
+  action: string
+  entity_type: string
+  entity_id: string | null
+  details: any
+}
+
+/**
  * Prodotto con relazioni
  */
 export interface Product extends ProductBase {
   category?: Category
   variants?: ProductVariant[]
   kit_items?: KitItem[]
-  allergens?: string[] | null // Aggiunto campo allergeni
+  allergens?: string[] | null
 }
 
 /**

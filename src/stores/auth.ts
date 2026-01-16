@@ -2,11 +2,15 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { supabase, handleSupabaseError } from '@/utils/supabase'
 import type { User } from '@supabase/supabase-js'
+import { useAudit } from '@/composables/useAudit'
 
 export const useAuthStore = defineStore('auth', () => {
   const user = ref<User | null>(null)
-  const loading = ref(true) // Inizia come true per evitare flash di contenuto non autorizzato
+  const loading = ref(true)
   const error = ref<string | null>(null)
+
+  // Audit
+  const { logAction } = useAudit()
 
   const isAuthenticated = computed(() => !!user.value)
   const userEmail = computed(() => user.value?.email || '')
@@ -18,22 +22,14 @@ export const useAuthStore = defineStore('auth', () => {
     try {
       loading.value = true
 
-      // Recupera la sessione corrente
-      const {
-        data: { session },
-        error: sessionError,
-      } = await supabase.auth.getSession()
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession()
 
       if (sessionError) throw sessionError
 
       if (session?.user) {
         user.value = session.user
       } else {
-        // Se non c'è sessione, prova a recuperare l'utente (doppio controllo)
-        const {
-          data: { user: currentUser },
-          error: userError,
-        } = await supabase.auth.getUser()
+        const { data: { user: currentUser }, error: userError } = await supabase.auth.getUser()
         if (!userError && currentUser) {
           user.value = currentUser
         } else {
@@ -64,6 +60,10 @@ export const useAuthStore = defineStore('auth', () => {
       if (signInError) throw signInError
 
       user.value = data.user
+
+      // Log Login
+      await logAction('LOGIN', 'auth', user.value?.id, { email })
+
       return { success: true }
     } catch (err: any) {
       error.value = handleSupabaseError(err)
@@ -80,6 +80,11 @@ export const useAuthStore = defineStore('auth', () => {
     try {
       loading.value = true
       error.value = null
+
+      // Log Logout prima di cancellare l'utente locale
+      if (user.value) {
+        await logAction('LOGOUT', 'auth', user.value.id)
+      }
 
       const { error: signOutError } = await supabase.auth.signOut()
 

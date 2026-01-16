@@ -3,12 +3,15 @@ import { ref, computed } from 'vue'
 import { supabase, handleSupabaseError } from '@/utils/supabase'
 import type { Product, ProductVariant } from '@/types/models'
 import type { RealtimeChannel } from '@supabase/supabase-js'
+import { useAudit } from '@/composables/useAudit'
 
 export const useProductsStore = defineStore('products', () => {
   const products = ref<Product[]>([])
   const loading = ref(false)
   const error = ref<string | null>(null)
   const realtimeChannel = ref<RealtimeChannel | null>(null)
+
+  const { logAction } = useAudit()
 
   // Computed
   const activeProducts = computed(() => products.value.filter((p) => p.is_active))
@@ -71,20 +74,18 @@ export const useProductsStore = defineStore('products', () => {
         .order('display_order', { ascending: true })
 
       if (fetchError) {
-        // Se l'errore è relativo alla relazione kit_items mancante (es. se la tabella non esiste o la FK è errata),
-        // proviamo a fare una fetch senza quella relazione per non bloccare tutto.
         console.warn('Errore fetch completo, riprovo senza kit_items:', fetchError)
 
         const { data: fallbackData, error: fallbackError } = await supabase
-          .from('products')
-          .select(
-            `
+        .from('products')
+        .select(
+          `
           *,
           category:categories(*),
           variants:product_variants(*)
         `,
-          )
-          .order('display_order', { ascending: true })
+        )
+        .order('display_order', { ascending: true })
 
         if (fallbackError) throw fallbackError
         products.value = fallbackData || []
@@ -115,7 +116,11 @@ export const useProductsStore = defineStore('products', () => {
           `
           *,
           category:categories(*),
-          variants:product_variants(*)
+          variants:product_variants(*),
+          kit_items(
+            *,
+            product:included_product_id(*)
+          )
         `,
         )
         .eq('is_active', true)
@@ -205,6 +210,10 @@ export const useProductsStore = defineStore('products', () => {
       if (insertError) throw insertError
 
       products.value.push(data)
+
+      // Audit
+      await logAction('CREATE_PRODUCT', 'product', data.id, { name: data.name, price: data.price })
+
       return { success: true, data }
     } catch (err: any) {
       error.value = handleSupabaseError(err)
@@ -221,6 +230,9 @@ export const useProductsStore = defineStore('products', () => {
     try {
       loading.value = true
       error.value = null
+
+      // Recupera stato precedente per diff (opzionale, per semplicità logghiamo solo l'update)
+      const oldProduct = getProductById(id)
 
       const { data, error: updateError } = await supabase
         .from('products')
@@ -242,6 +254,13 @@ export const useProductsStore = defineStore('products', () => {
         products.value[index] = data
       }
 
+      // Audit
+      await logAction('UPDATE_PRODUCT', 'product', id, {
+        changes: updates,
+        old_price: oldProduct?.price,
+        new_price: updates.price
+      })
+
       return { success: true, data }
     } catch (err: any) {
       error.value = handleSupabaseError(err)
@@ -259,11 +278,17 @@ export const useProductsStore = defineStore('products', () => {
       loading.value = true
       error.value = null
 
+      const product = getProductById(id)
+
       const { error: deleteError } = await supabase.from('products').delete().eq('id', id)
 
       if (deleteError) throw deleteError
 
       products.value = products.value.filter((p) => p.id !== id)
+
+      // Audit
+      await logAction('DELETE_PRODUCT', 'product', id, { name: product?.name })
+
       return { success: true }
     } catch (err: any) {
       error.value = handleSupabaseError(err)
