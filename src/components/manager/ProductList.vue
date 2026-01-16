@@ -31,6 +31,12 @@ function handleDelete(id: string) {
               scope="col"
               class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider"
             >
+              Id
+            </th>
+            <th
+              scope="col"
+              class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider"
+            >
               Prodotto
             </th>
             <th
@@ -68,6 +74,14 @@ function handleDelete(id: string) {
             :key="product.id"
             class="hover:bg-gray-50 transition-colors"
           >
+            <!-- Product ID -->
+            <td class="px-6 py-4 whitespace-nowrap">
+              <span
+                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800"
+              >
+                {{ product.id }}
+              </span>
+            </td>
             <!-- Product Info -->
             <td class="px-6 py-4 whitespace-nowrap">
               <div class="flex items-center">

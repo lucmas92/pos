@@ -4,6 +4,7 @@ import { useAudit } from '@/composables/useAudit'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
 import { formatDate } from '@/utils/date.ts'
+import { formatCurrency } from '@/utils/currency.ts'
 
 const { logs, loading, fetchLogs } = useAudit()
 
@@ -19,9 +20,19 @@ function getActionColor(action: string) {
   return 'bg-gray-100 text-gray-800'
 }
 
-function formatDetails(details: any) {
-  if (!details) return '-'
-  return JSON.stringify(details, null, 2)
+function formatValue(key: string, value: any): string {
+  if (value === null || value === undefined) return '-'
+  if (typeof value === 'boolean') return value ? 'Sì' : 'No'
+  if (key.includes('price') || key.includes('amount')) return formatCurrency(Number(value))
+  return String(value)
+}
+
+function getChangedFields(details: any) {
+  if (!details || !details.changes) return []
+  return Object.entries(details.changes).map(([key, value]) => ({
+    key,
+    value
+  }))
 }
 </script>
 
@@ -52,44 +63,98 @@ function formatDetails(details: any) {
         <table class="min-w-full divide-y divide-gray-100">
           <thead class="bg-gray-50">
             <tr>
-              <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
+              <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider w-40">
                 Data
               </th>
-              <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
+              <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider w-48">
                 Utente
               </th>
-              <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
+              <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider w-32">
                 Azione
               </th>
               <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
-                Entità
-              </th>
-              <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
-                Dettagli
+                Dettagli Modifica
               </th>
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-100">
             <tr v-for="log in logs" :key="log.id" class="hover:bg-gray-50 transition-colors">
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+              <!-- Date -->
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 align-top">
                 {{ formatDate(log.created_at, true) }}
               </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                {{ log.user_email || 'Sistema' }}
+
+              <!-- User -->
+              <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 align-top">
+                <div class="flex items-center">
+                  <div class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 mr-2 text-xs font-bold">
+                    {{ (log.user_email || 'S').charAt(0).toUpperCase() }}
+                  </div>
+                  {{ log.user_email || 'Sistema' }}
+                </div>
               </td>
-              <td class="px-6 py-4 whitespace-nowrap">
-                <span
-                  class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold"
-                  :class="getActionColor(log.action)"
-                >
-                  {{ log.action }}
-                </span>
+
+              <!-- Action & Entity -->
+              <td class="px-6 py-4 whitespace-nowrap align-top">
+                <div class="flex flex-col gap-1">
+                  <span
+                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold w-fit"
+                    :class="getActionColor(log.action)"
+                  >
+                    {{ log.action }}
+                  </span>
+                  <span class="text-xs text-gray-400 font-mono">
+                    {{ log.entity_type }} #{{ log.entity_id?.slice(-8) }}
+                  </span>
+                </div>
               </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {{ log.entity_type }} <span v-if="log.entity_id" class="text-xs text-gray-400">({{ log.entity_id.substring(0, 8) }}...)</span>
-              </td>
-              <td class="px-6 py-4 text-sm text-gray-600 font-mono text-xs">
-                <pre class="whitespace-pre-wrap max-w-xs overflow-hidden">{{ formatDetails(log.details) }}</pre>
+
+              <!-- Details (Smart Rendering) -->
+              <td class="px-6 py-4 text-sm text-gray-600 align-top">
+
+                <!-- Case: Update Product (Show changes) -->
+                <div v-if="log.action === 'UPDATE_PRODUCT' && log.details?.changes" class="space-y-1">
+                  <div v-for="field in getChangedFields(log.details)" :key="field.key" class="flex items-center gap-2">
+                    <span class="font-medium text-gray-700 bg-gray-100 px-1.5 py-0.5 rounded text-xs">{{ field.key }}</span>
+                    <span class="text-gray-400">→</span>
+                    <span class="font-medium text-gray-900">{{ formatValue(field.key, field.value) }}</span>
+
+                    <!-- Show old price if available -->
+                    <span v-if="field.key === 'price' && log.details.old_price" class="text-xs text-gray-400 line-through ml-1">
+                      {{ formatCurrency(log.details.old_price) }}
+                    </span>
+                  </div>
+                </div>
+
+                <!-- Case: Update Order Status -->
+                <div v-else-if="log.action === 'UPDATE_ORDER_STATUS'" class="flex items-center gap-2">
+                  <span class="text-gray-500">Stato:</span>
+                  <span class="px-2 py-0.5 bg-gray-100 text-gray-600 rounded text-xs line-through">{{ log.details?.old_status }}</span>
+                  <span class="text-gray-400">→</span>
+                  <span class="px-2 py-0.5 bg-blue-50 text-blue-700 rounded text-xs font-bold">{{ log.details?.new_status }}</span>
+                  <span v-if="log.details?.order_number" class="text-xs text-gray-400 ml-2">(Ordine #{{ log.details.order_number }})</span>
+                </div>
+
+                <!-- Case: Create/Delete Product -->
+                <div v-else-if="log.action.includes('_PRODUCT')" class="flex items-center gap-2">
+                  <span class="text-gray-500">Nome:</span>
+                  <span class="font-bold text-gray-900">{{ log.details?.name || '-' }}</span>
+                  <span v-if="log.details?.price" class="text-gray-500 ml-2">Prezzo: {{ formatCurrency(log.details.price) }}</span>
+                </div>
+
+                <!-- Case: Login -->
+                <div v-else-if="log.action === 'LOGIN'" class="text-gray-500 italic">
+                  Accesso effettuato con successo
+                </div>
+
+                <!-- Fallback: Key-Value List -->
+                <div v-else class="grid grid-cols-1 gap-1">
+                  <div v-for="(value, key) in log.details" :key="key" class="flex gap-2 text-xs">
+                    <span class="font-medium text-gray-500">{{ key }}:</span>
+                    <span class="text-gray-900 truncate max-w-xs">{{ value }}</span>
+                  </div>
+                </div>
+
               </td>
             </tr>
           </tbody>
