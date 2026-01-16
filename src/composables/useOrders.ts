@@ -10,7 +10,7 @@ export function useOrders(options?: {
   autoFetch?: boolean
   limit?: number
   todayOnly?: boolean
-  status?: 'pending' | 'completed' | 'cancelled'
+  status?: 'pending' | 'paid' | 'completed' | 'cancelled'
   realtime?: boolean
 }) {
   const { autoFetch = true, limit, todayOnly = false, status, realtime = false } = options || {}
@@ -24,6 +24,7 @@ export function useOrders(options?: {
     loading,
     error,
     pendingOrders,
+    paidOrders,
     completedOrders,
     cancelledOrders,
     todayOrders,
@@ -42,6 +43,10 @@ export function useOrders(options?: {
 
     if (status === 'pending') {
       return pendingOrders.value
+    }
+
+    if (status === 'paid') {
+      return paidOrders.value
     }
 
     if (status === 'completed') {
@@ -113,8 +118,18 @@ export function useOrders(options?: {
   /**
    * Aggiorna lo stato di un ordine
    */
-  async function updateStatus(id: string, newStatus: 'pending' | 'completed' | 'cancelled') {
+  async function updateStatus(
+    id: string,
+    newStatus: 'pending' | 'paid' | 'completed' | 'cancelled',
+  ) {
     return await ordersStore.updateOrderStatus(id, newStatus)
+  }
+
+  /**
+   * Segna un ordine come pagato
+   */
+  async function markAsPaid(id: string) {
+    return await ordersStore.updateOrderStatus(id, 'paid')
   }
 
   /**
@@ -328,6 +343,7 @@ export function useOrders(options?: {
    */
   const ordersByStatus = computed(() => ({
     pending: pendingOrders.value.length,
+    paid: paidOrders.value.length,
     completed: completedOrders.value.length,
     cancelled: cancelledOrders.value.length,
   }))
@@ -432,6 +448,7 @@ export function useOrders(options?: {
 
     // Refs per accesso diretto
     pendingOrders,
+    paidOrders,
     completedOrders,
     cancelledOrders,
     todayOrders,
@@ -443,6 +460,7 @@ export function useOrders(options?: {
     fetchByNumber,
     create,
     updateStatus,
+    markAsPaid,
     complete,
     cancel,
     search,

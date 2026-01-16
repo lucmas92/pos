@@ -46,7 +46,8 @@ const containerClasses = {
 
 <style scoped>
 @keyframes bounce-custom {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateY(0);
     opacity: 0.6;
   }

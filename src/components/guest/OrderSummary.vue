@@ -32,7 +32,11 @@ const cart = useCart()
             </div>
           </div>
           <div class="font-medium text-gray-900 whitespace-nowrap">
-            {{ formatCurrency((item.product.price + (item.variant?.price_modifier || 0)) * item.quantity) }}
+            {{
+              formatCurrency(
+                (item.product.price + (item.variant?.price_modifier || 0)) * item.quantity,
+              )
+            }}
           </div>
         </div>
       </div>

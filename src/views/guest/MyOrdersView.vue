@@ -27,7 +27,12 @@ function goBack() {
           <!-- Back Button -->
           <button @click="goBack" class="btn btn-ghost -ml-2">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M15 19l-7-7 7-7"
+              />
             </svg>
           </button>
 
@@ -40,7 +45,6 @@ function goBack() {
     <!-- Main Content -->
     <main class="container-custom py-6 pb-32">
       <div class="max-w-2xl mx-auto space-y-6">
-
         <!-- Empty State -->
         <EmptyState
           v-if="orders.length === 0"
@@ -62,26 +66,27 @@ function goBack() {
               <div>
                 <div class="flex items-center gap-2">
                   <span class="text-2xl font-bold text-primary-600">#{{ order.order_number }}</span>
-                  <span class="px-2 py-0.5 bg-green-100 text-green-800 text-xs font-bold rounded-full">
+                  <span
+                    class="px-2 py-0.5 bg-green-100 text-green-800 text-xs font-bold rounded-full"
+                  >
                     Inviato
                   </span>
                 </div>
                 <p class="text-sm text-gray-500 mt-1">{{ formatDate(order.created_at) }}</p>
               </div>
               <div class="text-right">
-                <p class="text-lg font-bold text-gray-900">{{ formatCurrency(order.total_amount) }}</p>
+                <p class="text-lg font-bold text-gray-900">
+                  {{ formatCurrency(order.total_amount) }}
+                </p>
                 <p class="text-xs text-gray-500">{{ order.items_count }} prodotti</p>
               </div>
             </div>
 
             <div class="pt-4 border-t border-gray-50 flex justify-end">
-              <p class="text-xs text-gray-400 italic">
-                Conserva questo numero per il ritiro
-              </p>
+              <p class="text-xs text-gray-400 italic">Conserva questo numero per il ritiro</p>
             </div>
           </div>
         </div>
-
       </div>
     </main>
   </div>

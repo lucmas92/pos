@@ -1,12 +1,11 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch, computed } from 'vue'
 import { useOrders } from '@/composables/useOrders'
-import { formatCurrency } from '@/utils/currency'
 import type { Order } from '@/types/models'
 import AppModal from '@/components/common/AppModal.vue'
 import AppButton from '@/components/common/AppButton.vue'
+import { formatCurrency } from '@/utils/currency.ts'
 import { formatDate } from '@/utils/date.ts'
-import { printOrderReceipt } from '@/utils/receipt'
 
 interface Props {
   orders: Order[]
@@ -16,7 +15,7 @@ interface Emits {
   (e: 'refetch'): void
 }
 
-defineProps<Props>()
+const props = defineProps<Props>()
 const emit = defineEmits<Emits>()
 
 const { updateStatus } = useOrders()
@@ -24,14 +23,45 @@ const { updateStatus } = useOrders()
 // State
 const selectedOrder = ref<Order | null>(null)
 const showDetails = ref(false)
+const sortDirection = ref<'asc' | 'desc'>('desc')
+
+// Computed
+const sortedOrders = computed(() => {
+  return [...props.orders].sort((a, b) => {
+    const dateA = new Date(a.created_at).getTime()
+    const dateB = new Date(b.created_at).getTime()
+    return sortDirection.value === 'asc' ? dateA - dateB : dateB - dateA
+  })
+})
+
+// Watch for changes in the orders list to update the selected order if it's open
+watch(
+  () => props.orders,
+  (newOrders) => {
+    if (selectedOrder.value && showDetails.value) {
+      const updatedOrder = newOrders.find((o) => o.id === selectedOrder.value!.id)
+      if (updatedOrder) {
+        selectedOrder.value = updatedOrder
+      }
+    }
+  },
+  { deep: true },
+)
 
 // Methods
+function toggleSort() {
+  sortDirection.value = sortDirection.value === 'asc' ? 'desc' : 'asc'
+}
+
 function handleViewDetails(order: Order) {
   selectedOrder.value = order
   showDetails.value = true
 }
 
-async function handleStatusChange(order: Order, status: 'pending' | 'completed' | 'cancelled') {
+async function handleStatusChange(
+  order: Order,
+  status: 'pending' | 'paid' | 'completed' | 'cancelled',
+) {
   showDetails.value = false
   if (status === 'cancelled' && !confirm('Sei sicuro di voler annullare questo ordine?')) return
 
@@ -40,12 +70,6 @@ async function handleStatusChange(order: Order, status: 'pending' | 'completed' 
 
   if (selectedOrder.value?.id === order.id) {
     selectedOrder.value = { ...order, status }
-  }
-}
-
-function handlePrint() {
-  if (selectedOrder.value) {
-    printOrderReceipt(selectedOrder.value)
   }
 }
 </script>
@@ -82,9 +106,26 @@ function handlePrint() {
             </th>
             <th
               scope="col"
-              class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider"
+              class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors group"
+              @click="toggleSort"
             >
-              Data
+              <div class="flex items-center gap-1">
+                Data
+                <svg
+                  class="w-4 h-4 text-gray-400 group-hover:text-gray-600 transition-colors"
+                  :class="{ 'rotate-180': sortDirection === 'asc' }"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
+              </div>
             </th>
             <th scope="col" class="relative px-6 py-4">
               <span class="sr-only">Azioni</span>
@@ -93,7 +134,7 @@ function handlePrint() {
         </thead>
         <tbody class="bg-white divide-y divide-gray-100">
           <tr
-            v-for="order in orders"
+            v-for="order in sortedOrders"
             :key="order.id"
             class="hover:bg-gray-50 transition-colors cursor-pointer"
             @click="handleViewDetails(order)"
@@ -128,6 +169,7 @@ function handlePrint() {
                 class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold"
                 :class="{
                   'bg-yellow-100 text-yellow-800': order.status === 'pending',
+                  'bg-blue-100 text-blue-800': order.status === 'paid',
                   'bg-green-100 text-green-800': order.status === 'completed',
                   'bg-red-100 text-red-800': order.status === 'cancelled',
                 }"
@@ -135,23 +177,43 @@ function handlePrint() {
                 {{
                   order.status === 'pending'
                     ? 'In attesa'
-                    : order.status === 'completed'
-                      ? 'Completato'
-                      : 'Annullato'
+                    : order.status === 'paid'
+                      ? 'Pagato'
+                      : order.status === 'completed'
+                        ? 'Completato'
+                        : 'Annullato'
                 }}
               </span>
             </td>
 
             <!-- Date -->
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-              {{ formatDate(order.created_at) }}
+              {{ formatDate(order.created_at, true) }}
             </td>
 
             <!-- Actions -->
             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium" @click.stop>
               <div class="flex items-center justify-end space-x-2">
+                <!-- Mark as Paid -->
                 <button
                   v-if="order.status === 'pending'"
+                  @click="handleStatusChange(order, 'paid')"
+                  class="text-blue-600 hover:text-blue-900 p-1 rounded-lg hover:bg-blue-50 transition-colors"
+                  title="Segna come Pagato"
+                >
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"
+                    />
+                  </svg>
+                </button>
+
+                <!-- Complete -->
+                <button
+                  v-if="order.status === 'paid'"
                   @click="handleStatusChange(order, 'completed')"
                   class="text-green-600 hover:text-green-900 p-1 rounded-lg hover:bg-green-50 transition-colors"
                   title="Completa"
@@ -165,8 +227,10 @@ function handlePrint() {
                     />
                   </svg>
                 </button>
+
+                <!-- Cancel -->
                 <button
-                  v-if="order.status !== 'cancelled'"
+                  v-if="order.status !== 'cancelled' && order.status !== 'completed'"
                   @click="handleStatusChange(order, 'cancelled')"
                   class="text-red-600 hover:text-red-900 p-1 rounded-lg hover:bg-red-50 transition-colors"
                   title="Annulla"
@@ -261,16 +325,19 @@ function handlePrint() {
           </AppButton>
 
           <AppButton
-            @click="handlePrint"
-            variant="secondary"
-            class="flex-1"
-            title="Stampa scontrino"
+            v-if="selectedOrder.status === 'pending'"
+            @click="handleStatusChange(selectedOrder, 'paid')"
+            variant="primary"
+            class="flex-1 bg-blue-600 hover:bg-blue-700 focus:ring-blue-500"
           >
-            🖨️ Stampa          </AppButton>
+            Segna come Pagato
+          </AppButton>
 
           <AppButton
-            v-if="selectedOrder.status === 'pending'"
-            @click="handleStatusChange(selectedOrder, 'completed')"
+            v-if="selectedOrder.status === 'paid'"
+            @click="
+              handleStatusChange(selectedOrder, 'completed')
+            "
             variant="primary"
             class="flex-1"
           >

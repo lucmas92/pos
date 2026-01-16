@@ -19,7 +19,10 @@ export const useAuthStore = defineStore('auth', () => {
       loading.value = true
 
       // Recupera la sessione corrente
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession()
 
       if (sessionError) throw sessionError
 
@@ -27,7 +30,10 @@ export const useAuthStore = defineStore('auth', () => {
         user.value = session.user
       } else {
         // Se non c'è sessione, prova a recuperare l'utente (doppio controllo)
-        const { data: { user: currentUser }, error: userError } = await supabase.auth.getUser()
+        const {
+          data: { user: currentUser },
+          error: userError,
+        } = await supabase.auth.getUser()
         if (!userError && currentUser) {
           user.value = currentUser
         } else {

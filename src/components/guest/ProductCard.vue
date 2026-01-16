@@ -12,7 +12,13 @@ interface Props {
 }
 
 interface Emits {
-  (e: 'add-to-cart', product: Product, variant?: ProductVariant, notes?: string, quantity?: number): void
+  (
+    e: 'add-to-cart',
+    product: Product,
+    variant?: ProductVariant,
+    notes?: string,
+    quantity?: number,
+  ): void
 }
 
 const props = defineProps<Props>()
@@ -49,7 +55,13 @@ function handleAddToCart() {
     return
   }
 
-  emit('add-to-cart', props.product, selectedVariant.value, notes.value || undefined, quantity.value)
+  emit(
+    'add-to-cart',
+    props.product,
+    selectedVariant.value,
+    notes.value || undefined,
+    quantity.value,
+  )
 
   // Reset
   selectedVariant.value = undefined
@@ -80,9 +92,14 @@ function decrementQuantity() {
 </script>
 
 <template>
-  <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col h-full transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
+  <div
+    class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col h-full transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
+  >
     <!-- Image -->
-    <div class="relative h-48 bg-gray-100 overflow-hidden group cursor-pointer" @click="handleQuickAdd">
+    <div
+      class="relative h-48 bg-gray-100 overflow-hidden group cursor-pointer"
+      @click="handleQuickAdd"
+    >
       <img
         v-if="product.image_url"
         :src="product.image_url"
@@ -91,26 +108,45 @@ function decrementQuantity() {
       />
       <div v-else class="w-full h-full flex items-center justify-center text-gray-300">
         <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+          />
         </svg>
       </div>
 
       <!-- Badges -->
       <div class="absolute top-3 left-3 flex flex-col gap-2">
-        <span v-if="inCart" class="px-2 py-1 bg-primary-600 text-white text-xs font-bold rounded-lg shadow-sm">
+        <span
+          v-if="inCart"
+          class="px-2 py-1 bg-primary-600 text-white text-xs font-bold rounded-lg shadow-sm"
+        >
           {{ cartQuantity }} nel carrello
         </span>
-        <span v-if="isLowStock" class="px-2 py-1 bg-yellow-400 text-yellow-900 text-xs font-bold rounded-lg shadow-sm">
+        <span
+          v-if="isLowStock"
+          class="px-2 py-1 bg-yellow-400 text-yellow-900 text-xs font-bold rounded-lg shadow-sm"
+        >
           Ultimi {{ product.quantity_available }}
         </span>
-        <span v-if="product.is_kit" class="px-2 py-1 bg-purple-500 text-white text-xs font-bold rounded-lg shadow-sm">
+        <span
+          v-if="product.is_kit"
+          class="px-2 py-1 bg-purple-500 text-white text-xs font-bold rounded-lg shadow-sm"
+        >
           Menu
         </span>
       </div>
 
       <!-- Out of Stock Overlay -->
-      <div v-if="isOutOfStock" class="absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center">
-        <span class="px-4 py-2 bg-red-100 text-red-800 font-bold rounded-xl border border-red-200 shadow-sm">
+      <div
+        v-if="isOutOfStock"
+        class="absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center"
+      >
+        <span
+          class="px-4 py-2 bg-red-100 text-red-800 font-bold rounded-xl border border-red-200 shadow-sm"
+        >
           Esaurito
         </span>
       </div>
@@ -127,7 +163,10 @@ function decrementQuantity() {
         </p>
 
         <!-- Kit items preview (small) -->
-        <div v-if="product.is_kit && product.kit_items && product.kit_items.length > 0" class="mb-3">
+        <div
+          v-if="product.is_kit && product.kit_items && product.kit_items.length > 0"
+          class="mb-3"
+        >
           <p class="text-xs text-gray-500 font-medium mb-1">Include:</p>
           <div class="flex flex-wrap gap-1">
             <span
@@ -150,9 +189,7 @@ function decrementQuantity() {
           <span class="text-xl font-bold text-primary-600 block">
             {{ formatCurrency(product.price) }}
           </span>
-          <span v-if="hasVariants" class="text-xs text-gray-400 font-medium">
-            + opzioni
-          </span>
+          <span v-if="hasVariants" class="text-xs text-gray-400 font-medium"> + opzioni </span>
         </div>
 
         <button
@@ -162,11 +199,16 @@ function decrementQuantity() {
           :class="[
             isOutOfStock
               ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-              : 'bg-primary-50 text-primary-600 hover:bg-primary-600 hover:text-white hover:shadow-md hover:-translate-y-0.5'
+              : 'bg-primary-50 text-primary-600 hover:bg-primary-600 hover:text-white hover:shadow-md hover:-translate-y-0.5',
           ]"
         >
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M12 4v16m8-8H4"
+            />
           </svg>
         </button>
       </div>
@@ -181,10 +223,17 @@ function decrementQuantity() {
         </p>
 
         <!-- Kit Details -->
-        <div v-if="product.is_kit && product.kit_items && product.kit_items.length > 0" class="bg-purple-50 p-4 rounded-xl border border-purple-100">
+        <div
+          v-if="product.is_kit && product.kit_items && product.kit_items.length > 0"
+          class="bg-purple-50 p-4 rounded-xl border border-purple-100"
+        >
           <h4 class="font-bold text-purple-900 mb-2 text-sm">Il menu include:</h4>
           <ul class="space-y-2">
-            <li v-for="item in product.kit_items" :key="item.id" class="flex items-center text-sm text-purple-800">
+            <li
+              v-for="item in product.kit_items"
+              :key="item.id"
+              class="flex items-center text-sm text-purple-800"
+            >
               <span class="w-1.5 h-1.5 bg-purple-400 rounded-full mr-2"></span>
               <span class="font-bold mr-1">{{ item.quantity }}x</span>
               {{ item.product?.name }}
@@ -204,18 +253,30 @@ function decrementQuantity() {
               :class="[
                 selectedVariant?.id === variant.id
                   ? 'border-primary-600 bg-primary-50 ring-1 ring-primary-600'
-                  : 'border-gray-100 hover:border-gray-300 hover:bg-gray-50'
+                  : 'border-gray-100 hover:border-gray-300 hover:bg-gray-50',
               ]"
             >
               <span class="font-medium text-gray-900">{{ variant.name }}</span>
-              <span class="text-sm font-bold" :class="selectedVariant?.id === variant.id ? 'text-primary-700' : 'text-gray-500'">
-                {{ variant.price_modifier > 0 ? '+' : '' }}{{ formatCurrency(variant.price_modifier) }}
+              <span
+                class="text-sm font-bold"
+                :class="selectedVariant?.id === variant.id ? 'text-primary-700' : 'text-gray-500'"
+              >
+                {{ variant.price_modifier > 0 ? '+' : ''
+                }}{{ formatCurrency(variant.price_modifier) }}
               </span>
 
               <!-- Check icon -->
-              <div v-if="selectedVariant?.id === variant.id" class="absolute right-0 top-0 -mt-2 -mr-2 bg-primary-600 text-white rounded-full p-1 shadow-sm">
+              <div
+                v-if="selectedVariant?.id === variant.id"
+                class="absolute right-0 top-0 -mt-2 -mr-2 bg-primary-600 text-white rounded-full p-1 shadow-sm"
+              >
                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="3"
+                    d="M5 13l4 4L19 7"
+                  />
                 </svg>
               </div>
             </button>
@@ -232,7 +293,12 @@ function decrementQuantity() {
               class="w-10 h-10 flex items-center justify-center rounded-lg bg-white text-gray-600 shadow-sm hover:text-primary-600 disabled:opacity-50 disabled:shadow-none transition-all"
             >
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M20 12H4"
+                />
               </svg>
             </button>
 
@@ -246,7 +312,12 @@ function decrementQuantity() {
               class="w-10 h-10 flex items-center justify-center rounded-lg bg-white text-gray-600 shadow-sm hover:text-primary-600 disabled:opacity-50 disabled:shadow-none transition-all"
             >
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 4v16m8-8H4"
+                />
               </svg>
             </button>
           </div>
@@ -254,7 +325,9 @@ function decrementQuantity() {
 
         <!-- Notes -->
         <div>
-          <label class="block text-sm font-bold text-gray-700 mb-2">Note per la cucina (opzionale)</label>
+          <label class="block text-sm font-bold text-gray-700 mb-2"
+            >Note per la cucina (opzionale)</label
+          >
           <textarea
             v-model="notes"
             placeholder="Es: senza cipolla, ben cotto..."

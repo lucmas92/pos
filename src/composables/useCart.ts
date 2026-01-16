@@ -18,7 +18,12 @@ export function useCart() {
   /**
    * Aggiunge un prodotto al carrello con gestione errori
    */
-  function addToCart(product: Product, variant?: ProductVariant, notes?: string, quantity: number = 1) {
+  function addToCart(
+    product: Product,
+    variant?: ProductVariant,
+    notes?: string,
+    quantity: number = 1,
+  ) {
     try {
       cartStore.addItem(product, variant, notes, quantity)
       return { success: true }

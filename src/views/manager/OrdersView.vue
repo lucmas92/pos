@@ -10,7 +10,7 @@ const orders = useOrders({ autoFetch: true, realtime: true })
 
 // State
 const searchQuery = ref('')
-const filterStatus = ref<'all' | 'pending' | 'completed' | 'cancelled'>('all')
+const filterStatus = ref<'all' | 'pending' | 'paid' | 'completed' | 'cancelled'>('all')
 const filterDate = ref<'all' | 'today'>('all')
 
 // Computed
@@ -50,15 +50,19 @@ const filteredOrders = computed(() => {
 const stats = computed(() => {
   const all = filteredOrders.value
   const pending = all.filter((o) => o.status === 'pending')
+  const paid = all.filter((o) => o.status === 'paid')
   const completed = all.filter((o) => o.status === 'completed')
   const cancelled = all.filter((o) => o.status === 'cancelled')
+
+  // Calcola revenue solo per ordini pagati o completati
   const revenue = all
-    .filter((o) => o.status !== 'cancelled')
+    .filter((o) => o.status === 'paid' || o.status === 'completed')
     .reduce((sum, o) => sum + o.total_amount, 0)
 
   return {
     all: all.length,
     pending: pending.length,
+    paid: paid.length,
     completed: completed.length,
     cancelled: cancelled.length,
     revenue,
@@ -87,7 +91,7 @@ function clearFilters() {
     </div>
 
     <!-- Stats -->
-    <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
       <div class="card text-center">
         <p class="text-sm text-gray-600">Totali</p>
         <p class="text-3xl font-bold text-gray-900 mt-1">{{ stats.all }}</p>
@@ -95,6 +99,10 @@ function clearFilters() {
       <div class="card text-center">
         <p class="text-sm text-yellow-600">In Attesa</p>
         <p class="text-3xl font-bold text-yellow-600 mt-1">{{ stats.pending }}</p>
+      </div>
+      <div class="card text-center">
+        <p class="text-sm text-blue-600">Pagati</p>
+        <p class="text-3xl font-bold text-blue-600 mt-1">{{ stats.paid }}</p>
       </div>
       <div class="card text-center">
         <p class="text-sm text-green-600">Completati</p>
@@ -145,6 +153,7 @@ function clearFilters() {
           <select v-model="filterStatus" class="input">
             <option value="all">Tutti</option>
             <option value="pending">In attesa</option>
+            <option value="paid">Pagati</option>
             <option value="completed">Completati</option>
             <option value="cancelled">Annullati</option>
           </select>

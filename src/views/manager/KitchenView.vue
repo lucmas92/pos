@@ -1,20 +1,24 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { useRoute } from 'vue-router'
 import { useOrders } from '@/composables/useOrders'
+import { formatCurrency, formatDate } from '@/utils/helpers'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
+import EmptyState from '@/components/common/EmptyState.vue'
 import type { Order } from '@/types/models'
 
+const route = useRoute()
 const orders = useOrders({ autoFetch: true, realtime: true })
 
-// Filtra solo gli ordini "pending" (in attesa)
+// Filtra solo gli ordini "paid" (pagati e pronti per la cucina)
 const kitchenOrders = computed(() => {
-
   return orders.orders.value
-    .filter((o) => o.status === 'pending')
+    .filter((o) => o.status === 'paid')
     .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()) // Ordina per data crescente (FIFO)
 })
 
 const loading = computed(() => orders.loading.value)
+const isFullscreen = computed(() => route.query.fullscreen === 'true')
 
 // Methods
 async function handleCompleteOrder(order: Order) {
@@ -56,11 +60,33 @@ onUnmounted(() => {
     <div class="flex items-center justify-between mb-6 border-b border-gray-700 pb-4">
       <div>
         <h1 class="text-3xl font-bold text-white">Cucina (KDS)</h1>
-        <p class="text-gray-400 mt-1">Ordini in attesa: {{ kitchenOrders.length }}</p>
+        <p class="text-gray-400 mt-1">Ordini in preparazione: {{ kitchenOrders.length }}</p>
       </div>
-      <div class="text-right">
-        <p class="text-xl font-mono font-bold">{{ now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }}</p>
-        <p class="text-sm text-gray-400">{{ now.toLocaleDateString() }}</p>
+      <div class="flex items-center gap-4">
+        <div class="text-right">
+          <p class="text-xl font-mono font-bold">
+            {{ now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }}
+          </p>
+          <p class="text-sm text-gray-400">{{ now.toLocaleDateString() }}</p>
+        </div>
+
+        <!-- Fullscreen Toggle -->
+        <a
+          v-if="!isFullscreen"
+          href="/manager/kitchen?fullscreen=true"
+          target="_blank"
+          class="p-2 bg-gray-800 hover:bg-gray-700 rounded-lg text-gray-400 hover:text-white transition-colors"
+          title="Apri in Fullscreen"
+        >
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"
+            />
+          </svg>
+        </a>
       </div>
     </div>
 
@@ -70,11 +96,19 @@ onUnmounted(() => {
     </div>
 
     <!-- Empty State -->
-    <div v-else-if="kitchenOrders.length === 0" class="flex flex-col items-center justify-center py-20 text-gray-500">
+    <div
+      v-else-if="kitchenOrders.length === 0"
+      class="flex flex-col items-center justify-center py-20 text-gray-500"
+    >
       <svg class="w-24 h-24 mb-4 opacity-20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+        />
       </svg>
-      <h2 class="text-2xl font-bold">Nessun ordine in attesa</h2>
+      <h2 class="text-2xl font-bold">Nessun ordine in preparazione</h2>
       <p>La cucina è libera!</p>
     </div>
 
@@ -90,11 +124,15 @@ onUnmounted(() => {
           <div>
             <div class="flex items-center gap-2">
               <span class="text-2xl font-bold text-white">#{{ order.order_number }}</span>
-              <span class="px-2 py-0.5 rounded text-xs font-bold bg-blue-900 text-blue-200 border border-blue-700">
+              <span
+                class="px-2 py-0.5 rounded text-xs font-bold bg-blue-900 text-blue-200 border border-blue-700"
+              >
                 {{ getTimeElapsed(order.created_at) }}
               </span>
             </div>
-            <p class="text-gray-300 font-medium mt-1 truncate max-w-[150px]">{{ order.guest_name || 'Ospite' }}</p>
+            <p class="text-gray-300 font-medium mt-1 truncate max-w-[150px]">
+              {{ order.guest_name || 'Ospite' }}
+            </p>
           </div>
           <div class="text-right">
             <p class="text-sm text-gray-400">Coperti: {{ order.covers }}</p>
@@ -104,15 +142,26 @@ onUnmounted(() => {
         <!-- Items List -->
         <div class="p-4 flex-1 overflow-y-auto max-h-[400px]">
           <ul class="space-y-3">
-            <li v-for="item in order.items" :key="item.id" class="border-b border-gray-700 pb-2 last:border-0 last:pb-0">
+            <li
+              v-for="item in order.items"
+              :key="item.id"
+              class="border-b border-gray-700 pb-2 last:border-0 last:pb-0"
+            >
               <div class="flex items-start gap-3">
-                <span class="bg-gray-600 text-white font-bold px-2 py-1 rounded text-lg min-w-[2rem] text-center">
+                <span
+                  class="bg-gray-600 text-white font-bold px-2 py-1 rounded text-lg min-w-[2rem] text-center"
+                >
                   {{ item.quantity }}
                 </span>
                 <div class="flex-1">
                   <p class="text-lg font-bold text-white leading-tight">{{ item.product?.name }}</p>
-                  <p v-if="item.variant" class="text-sm text-blue-300 font-medium mt-0.5">{{ item.variant.name }}</p>
-                  <p v-if="item.notes" class="text-sm text-yellow-400 font-bold mt-1 bg-yellow-900/30 p-1 rounded border border-yellow-900/50">
+                  <p v-if="item.variant" class="text-sm text-blue-300 font-medium mt-0.5">
+                    {{ item.variant.name }}
+                  </p>
+                  <p
+                    v-if="item.notes"
+                    class="text-sm text-yellow-400 font-bold mt-1 bg-yellow-900/30 p-1 rounded border border-yellow-900/50"
+                  >
                     ⚠️ {{ item.notes }}
                   </p>
                 </div>
@@ -136,7 +185,12 @@ onUnmounted(() => {
             class="w-full py-4 bg-green-600 hover:bg-green-500 text-white font-bold text-xl rounded-lg shadow-lg transition-colors flex items-center justify-center gap-2"
           >
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="3"
+                d="M5 13l4 4L19 7"
+              />
             </svg>
             PRONTO
           </button>

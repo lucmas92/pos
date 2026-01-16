@@ -76,15 +76,15 @@ export const useProductsStore = defineStore('products', () => {
         console.warn('Errore fetch completo, riprovo senza kit_items:', fetchError)
 
         const { data: fallbackData, error: fallbackError } = await supabase
-        .from('products')
-        .select(
-          `
+          .from('products')
+          .select(
+            `
           *,
           category:categories(*),
           variants:product_variants(*)
         `,
-        )
-        .order('display_order', { ascending: true })
+          )
+          .order('display_order', { ascending: true })
 
         if (fallbackError) throw fallbackError
         products.value = fallbackData || []

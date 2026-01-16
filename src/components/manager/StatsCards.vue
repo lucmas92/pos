@@ -1,5 +1,4 @@
 <script setup lang="ts">
-
 import { formatCurrency } from '@/utils/currency'
 import { formatNumber } from '@/utils/helpers'
 import KpiCard from '@/components/manager/KpiCard.vue'
@@ -8,9 +7,9 @@ interface Stats {
   todayOrders: number
   todayRevenue: number
   pendingOrders: number
-  totalProducts: number
-  outOfStock: number
-  lowStock: number
+  totalProducts?: number
+  outOfStock?: number
+  lowStock?: number
 }
 
 defineProps<{
@@ -69,6 +68,7 @@ defineProps<{
 
     <!-- Total Products -->
     <KpiCard
+      v-if="stats.totalProducts"
       title="Prodotti Totali"
       :value="formatNumber(stats.totalProducts)"
       variant="white"
@@ -88,6 +88,7 @@ defineProps<{
 
     <!-- Out of Stock -->
     <KpiCard
+      v-if="stats.outOfStock"
       title="Prodotti Esauriti"
       :value="formatNumber(stats.outOfStock)"
       variant="red"
@@ -107,6 +108,7 @@ defineProps<{
 
     <!-- Low Stock -->
     <KpiCard
+      v-if="stats.lowStock"
       title="Scorte Basse"
       :value="formatNumber(stats.lowStock)"
       variant="orange"

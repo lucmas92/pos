@@ -50,7 +50,11 @@ function handleClear() {
 <template>
   <!-- Overlay -->
   <Transition name="fade">
-    <div v-if="show" class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm z-50" @click="handleClose" />
+    <div
+      v-if="show"
+      class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm z-50"
+      @click="handleClose"
+    />
   </Transition>
 
   <!-- Sidebar -->
@@ -60,9 +64,7 @@ function handleClear() {
       class="fixed top-0 right-0 h-full w-full md:w-[450px] bg-white shadow-2xl z-50 flex flex-col"
     >
       <!-- Header -->
-      <div
-        class="flex items-center justify-between p-6 border-b border-gray-100 bg-white z-10"
-      >
+      <div class="flex items-center justify-between p-6 border-b border-gray-100 bg-white z-10">
         <div>
           <h2 class="text-2xl font-bold text-gray-900">Il tuo ordine</h2>
           <p class="text-sm text-gray-500 mt-1">{{ cart.totalItems.value }} prodotti selezionati</p>
@@ -72,7 +74,12 @@ function handleClear() {
           class="p-2 rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
         >
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M6 18L18 6M6 6l12 12"
+            />
           </svg>
         </button>
       </div>
@@ -98,10 +105,10 @@ function handleClear() {
           </svg>
         </div>
         <h3 class="text-xl font-bold text-gray-900 mb-2">Il carrello è vuoto</h3>
-        <p class="text-gray-500 mb-8 max-w-xs">Non hai ancora aggiunto nessun prodotto. Torna al menu per iniziare.</p>
-        <AppButton @click="handleClose" variant="primary">
-          Torna al menu
-        </AppButton>
+        <p class="text-gray-500 mb-8 max-w-xs">
+          Non hai ancora aggiunto nessun prodotto. Torna al menu per iniziare.
+        </p>
+        <AppButton @click="handleClose" variant="primary"> Torna al menu </AppButton>
       </div>
 
       <!-- Cart Items -->
@@ -120,7 +127,12 @@ function handleClear() {
               class="w-12 h-10 flex items-center justify-center rounded-lg bg-white text-gray-600 shadow-sm hover:text-primary-600 disabled:opacity-50 disabled:shadow-none transition-all"
             >
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M20 12H4"
+                />
               </svg>
             </button>
 
@@ -139,7 +151,12 @@ function handleClear() {
               class="w-12 h-10 flex items-center justify-center rounded-lg bg-white text-gray-600 shadow-sm hover:text-primary-600 disabled:opacity-50 disabled:shadow-none transition-all"
             >
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 4v16m8-8H4"
+                />
               </svg>
             </button>
           </div>
@@ -166,7 +183,12 @@ function handleClear() {
             class="w-full py-3 text-sm text-red-500 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors flex items-center justify-center font-medium"
           >
             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+              />
             </svg>
             Svuota intero carrello
           </button>
@@ -193,7 +215,9 @@ function handleClear() {
         <!-- Total -->
         <div class="flex justify-between items-center mb-6 pt-4 border-t border-gray-100">
           <span class="text-xl font-bold text-gray-900">Totale</span>
-          <span class="text-2xl font-bold text-primary-600">{{ formatCurrency(cart.totalAmount.value) }}</span>
+          <span class="text-2xl font-bold text-primary-600">{{
+            formatCurrency(cart.totalAmount.value)
+          }}</span>
         </div>
 
         <!-- Checkout Button -->
@@ -206,7 +230,12 @@ function handleClear() {
         >
           Riepilogo ordine
           <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M17 8l4 4m0 0l-4 4m4-4H3"
+            />
           </svg>
         </AppButton>
       </div>

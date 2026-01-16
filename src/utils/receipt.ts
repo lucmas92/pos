@@ -6,7 +6,10 @@ export function printOrderReceipt(order: Order) {
   const printWindow = window.open('', '_blank', 'width=400,height=600')
   if (!printWindow) return
 
-  const itemsHtml = order.items?.map(item => `
+  const itemsHtml =
+    order.items
+      ?.map(
+        (item) => `
     <div class="item">
       <div class="row">
         <span class="qty">${item.quantity}x</span>
@@ -15,7 +18,9 @@ export function printOrderReceipt(order: Order) {
       </div>
       ${item.notes ? `<div class="notes">Note: ${item.notes}</div>` : ''}
     </div>
-  `).join('') || ''
+  `,
+      )
+      .join('') || ''
 
   const htmlContent = `
     <!DOCTYPE html>

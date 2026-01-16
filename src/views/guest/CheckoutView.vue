@@ -97,7 +97,7 @@ function saveCompletedOrder(order: any) {
     order_number: order.order_number,
     total_amount: order.total_amount,
     created_at: order.created_at,
-    items_count: order.items?.length || 0
+    items_count: order.items?.length || 0,
   })
   // Mantieni solo gli ultimi 10 ordini
   if (completedOrders.length > 10) {

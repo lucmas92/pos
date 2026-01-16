@@ -96,9 +96,7 @@ function goToGuestMenu() {
 
         <!-- User Menu -->
         <div class="flex items-center">
-          <span class="text-sm text-gray-600 truncate max-w-25">{{
-            auth.userEmail.value
-          }}</span>
+          <span class="text-sm text-gray-600 truncate max-w-25">{{ auth.userEmail.value }}</span>
         </div>
       </div>
     </header>
@@ -112,9 +110,7 @@ function goToGuestMenu() {
     >
       <!-- Logo -->
       <div class="flex items-center h-16 px-4 border-b border-gray-200">
-        <div
-          class="w-10 h-10 bg-primary-600 rounded-lg flex items-center justify-center shrink-0"
-        >
+        <div class="w-10 h-10 bg-primary-600 rounded-lg flex items-center justify-center shrink-0">
           <span class="text-white font-bold text-xl">P</span>
         </div>
         <div v-if="sidebarOpen" class="ml-3 flex-1 min-w-0">
@@ -347,7 +343,7 @@ function goToGuestMenu() {
         'pt-16 lg:pt-0',
       ]"
     >
-      <div class="p-4 w-full mx-auto lg:p-6 ">
+      <div class="p-4 w-full mx-auto lg:p-6">
         <slot />
       </div>
     </main>

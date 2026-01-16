@@ -74,7 +74,7 @@ const styles = computed(() => {
     class="card relative overflow-hidden transition-all duration-300 flex flex-col justify-between h-full"
     :class="[
       styles.card,
-      isClickable && 'hover:-translate-y-1 hover:shadow-md cursor-pointer group'
+      isClickable && 'hover:-translate-y-1 hover:shadow-md cursor-pointer group',
     ]"
   >
     <div class="flex items-center justify-between">
@@ -92,16 +92,35 @@ const styles = computed(() => {
         <slot name="icon">
           <!-- Default Icon -->
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
+            />
           </svg>
         </slot>
       </div>
     </div>
 
     <!-- Click indicator (optional) -->
-    <div v-if="isClickable" class="absolute bottom-0 right-0 p-2 opacity-0 group-hover:opacity-100 transition-opacity">
-      <svg class="w-4 h-4" :class="styles.text" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+    <div
+      v-if="isClickable"
+      class="absolute bottom-0 right-0 p-2 opacity-0 group-hover:opacity-100 transition-opacity"
+    >
+      <svg
+        class="w-4 h-4"
+        :class="styles.text"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M14 5l7 7m0 0l-7 7m7-7H3"
+        />
       </svg>
     </div>
   </component>

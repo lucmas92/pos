@@ -11,6 +11,12 @@ const authStore = useAuthStore()
 
 // Determina quale layout usare in base alla route
 const layout = computed(() => {
+  // Se la query param 'fullscreen' è presente, usa un layout vuoto (DefaultLayout)
+  // Questo è utile per la Kitchen View
+  if (route.query.fullscreen === 'true') {
+    return DefaultLayout
+  }
+
   const layoutName = (route.meta.layout as string) || 'default'
 
   switch (layoutName) {

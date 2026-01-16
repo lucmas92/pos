@@ -60,7 +60,12 @@ export const useCartStore = defineStore('cart', () => {
   /**
    * Aggiunge un prodotto al carrello
    */
-  function addItem(product: Product, variant?: ProductVariant, notes?: string, quantity: number = 1) {
+  function addItem(
+    product: Product,
+    variant?: ProductVariant,
+    notes?: string,
+    quantity: number = 1,
+  ) {
     // Verifica disponibilità
     if (product.quantity_available <= 0) {
       throw new Error('Prodotto non disponibile')

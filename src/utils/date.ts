@@ -1,13 +1,18 @@
 /**
  * Formatta una data in formato italiano
  */
-export function formatDate(date: string | Date): string {
+export function formatDate(date: string | Date, withTime = false): string {
   const d = typeof date === 'string' ? new Date(date) : date
-  return new Intl.DateTimeFormat('it-IT', {
+  const options: Intl.DateTimeFormatOptions = {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
-  }).format(d)
+  }
+  if (withTime) {
+    options.hour = '2-digit'
+    options.minute = '2-digit'
+  }
+  return new Intl.DateTimeFormat('it-IT', options).format(d)
 }
 
 /**

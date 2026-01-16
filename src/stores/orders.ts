@@ -15,6 +15,8 @@ export const useOrdersStore = defineStore('orders', () => {
   // Computed
   const pendingOrders = computed(() => orders.value.filter((o) => o.status === 'pending'))
 
+  const paidOrders = computed(() => orders.value.filter((o) => o.status === 'paid'))
+
   const completedOrders = computed(() => orders.value.filter((o) => o.status === 'completed'))
 
   const cancelledOrders = computed(() => orders.value.filter((o) => o.status === 'cancelled'))
@@ -127,7 +129,7 @@ export const useOrdersStore = defineStore('orders', () => {
   /**
    * Carica ordini per stato
    */
-  async function fetchOrdersByStatus(status: 'pending' | 'completed' | 'cancelled') {
+  async function fetchOrdersByStatus(status: 'pending' | 'paid' | 'completed' | 'cancelled') {
     try {
       loading.value = true
       error.value = null
@@ -297,7 +299,10 @@ export const useOrdersStore = defineStore('orders', () => {
   /**
    * Aggiorna lo stato di un ordine
    */
-  async function updateOrderStatus(id: string, status: 'pending' | 'completed' | 'cancelled') {
+  async function updateOrderStatus(
+    id: string,
+    status: 'pending' | 'paid' | 'completed' | 'cancelled',
+  ) {
     try {
       loading.value = true
       error.value = null
@@ -366,6 +371,7 @@ export const useOrdersStore = defineStore('orders', () => {
       total: orders.value.length,
       today: todayOrders.value.length,
       pending: pendingOrders.value.length,
+      paid: paidOrders.value.length,
       completed: completedOrders.value.length,
       cancelled: cancelledOrders.value.length,
       todayRevenue: todayRevenue.value,
@@ -385,8 +391,6 @@ export const useOrdersStore = defineStore('orders', () => {
         'postgres_changes',
         { event: '*', schema: 'public', table: 'orders' },
         async (payload) => {
-
-          console.log('Received - payload:', payload)
           if (payload.eventType === 'INSERT') {
             // Ricarica l'ordine completo con items
             const { data } = await supabase
@@ -471,6 +475,7 @@ export const useOrdersStore = defineStore('orders', () => {
 
     // Getters
     pendingOrders,
+    paidOrders,
     completedOrders,
     cancelledOrders,
     todayOrders,
