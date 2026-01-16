@@ -4,6 +4,7 @@ import type { Product, ProductVariant } from '@/types/models'
 import { formatCurrency } from '@/utils/currency'
 import AppModal from '@/components/common/AppModal.vue'
 import AppButton from '@/components/common/AppButton.vue'
+import { ALLERGENS } from '@/constants/allergens'
 
 interface Props {
   product: Product
@@ -45,6 +46,11 @@ const hasVariants = computed(() => props.product.variants && props.product.varia
 
 // Un prodotto richiede il modale se ha varianti OPPURE se è un kit (per vedere cosa contiene) OPPURE se vogliamo sempre permettere di aggiungere note/quantità
 const requiresModal = computed(() => hasVariants.value || props.product.is_kit)
+
+const productAllergens = computed(() => {
+  if (!props.product.allergens) return []
+  return ALLERGENS.filter(a => props.product.allergens?.includes(a.id))
+})
 
 function handleAddToCart() {
   if (isOutOfStock.value) return
@@ -162,6 +168,18 @@ function decrementQuantity() {
           {{ product.description }}
         </p>
 
+        <!-- Allergens -->
+        <div v-if="productAllergens.length > 0" class="flex flex-wrap gap-1 mb-3">
+          <span
+            v-for="allergen in productAllergens"
+            :key="allergen.id"
+            class="text-xs bg-orange-50 text-orange-700 px-1.5 py-0.5 rounded border border-orange-100"
+            :title="allergen.label"
+          >
+            {{ allergen.icon }}
+          </span>
+        </div>
+
         <!-- Kit items preview (small) -->
         <div
           v-if="product.is_kit && product.kit_items && product.kit_items.length > 0"
@@ -218,9 +236,24 @@ function decrementQuantity() {
     <AppModal :isOpen="showVariants" @close="showVariants = false" :title="product.name">
       <div class="space-y-6">
         <!-- Description -->
-        <p v-if="product.description" class="text-gray-600 text-sm">
-          {{ product.description }}
-        </p>
+        <div v-if="product.description || productAllergens.length > 0">
+          <p v-if="product.description" class="text-gray-600 text-sm mb-2">
+            {{ product.description }}
+          </p>
+
+          <!-- Allergens in Modal -->
+          <div v-if="productAllergens.length > 0" class="flex flex-wrap gap-2">
+            <span class="text-xs font-bold text-gray-500 uppercase mr-1">Allergeni:</span>
+            <span
+              v-for="allergen in productAllergens"
+              :key="allergen.id"
+              class="text-xs bg-orange-50 text-orange-700 px-2 py-1 rounded-full border border-orange-100 flex items-center gap-1"
+            >
+              <span>{{ allergen.icon }}</span>
+              {{ allergen.label }}
+            </span>
+          </div>
+        </div>
 
         <!-- Kit Details -->
         <div

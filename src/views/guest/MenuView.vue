@@ -12,6 +12,7 @@ import CartSidebar from '@/components/guest/CartSidebar.vue'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
 import type { Product, ProductVariant } from '@/types/models'
+import { ALLERGENS } from '@/constants/allergens'
 
 // Composables
 const router = useRouter()
@@ -30,6 +31,7 @@ const { products, loading: loadingProducts } = useProducts({
 const selectedCategoryId = ref<string | null>(null)
 const showCart = ref(false)
 const searchQuery = ref('')
+const selectedAllergenFilter = ref<string | null>(null)
 
 // Computed
 const filteredProducts = computed(() => {
@@ -48,6 +50,11 @@ const filteredProducts = computed(() => {
     )
   }
 
+  // Filtra per allergene (escludi prodotti che contengono l'allergene selezionato)
+  if (selectedAllergenFilter.value) {
+    filtered = filtered.filter(p => !p.allergens?.includes(selectedAllergenFilter.value!))
+  }
+
   return filtered
 })
 
@@ -64,12 +71,7 @@ function handleCategoryChange(categoryId: string | null) {
   selectedCategoryId.value = categoryId
 }
 
-function handleAddToCart(
-  product: Product,
-  variant?: ProductVariant,
-  notes?: string,
-  quantity: number = 1,
-) {
+function handleAddToCart(product: Product, variant?: ProductVariant, notes?: string, quantity: number = 1) {
   const result = cart.addToCart(product, variant, notes, quantity)
 
   if (result.success) {
@@ -116,9 +118,7 @@ onMounted(() => {
         <div class="flex items-center justify-between h-20">
           <!-- Logo/Title -->
           <div class="flex items-center space-x-3">
-            <div
-              class="w-10 h-10 bg-primary-600 rounded-xl flex items-center justify-center shadow-lg shadow-primary-500/30"
-            >
+            <div class="w-10 h-10 bg-primary-600 rounded-xl flex items-center justify-center shadow-lg shadow-primary-500/30">
               <span class="text-white font-bold text-xl">P</span>
             </div>
             <div>
@@ -134,12 +134,7 @@ onMounted(() => {
               class="hidden md:flex items-center px-4 py-2 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-xl font-medium transition-colors"
             >
               <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
               </svg>
               I Miei Ordini
             </button>
@@ -148,21 +143,11 @@ onMounted(() => {
             <button
               v-if="auth.isAuthenticated.value"
               @click="goToManager"
-              class="hidden md:flex items-center px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded-xl font-medium transition-colors"
+              class="hidden md:flex items-center px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-medium transition-colors"
             >
               <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
-                />
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
               Area Manager
             </button>
@@ -176,8 +161,9 @@ onMounted(() => {
           </div>
         </div>
 
-        <!-- Search Bar -->
-        <div class="pb-4">
+        <!-- Search & Filters -->
+        <div class="pb-4 space-y-3">
+          <!-- Search Bar -->
           <div class="relative">
             <input
               v-model="searchQuery"
@@ -199,6 +185,28 @@ onMounted(() => {
               />
             </svg>
           </div>
+
+          <!-- Allergen Filter -->
+          <div class="flex items-center gap-2 overflow-x-auto scrollbar-hide pb-1">
+            <span class="text-xs font-bold text-gray-500 uppercase whitespace-nowrap mr-1">Senza:</span>
+            <button
+              @click="selectedAllergenFilter = null"
+              class="px-3 py-1.5 rounded-full text-xs font-medium transition-colors whitespace-nowrap border"
+              :class="selectedAllergenFilter === null ? 'bg-gray-800 text-white border-gray-800' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'"
+            >
+              Tutti
+            </button>
+            <button
+              v-for="allergen in ALLERGENS"
+              :key="allergen.id"
+              @click="selectedAllergenFilter = selectedAllergenFilter === allergen.id ? null : allergen.id"
+              class="px-3 py-1.5 rounded-full text-xs font-medium transition-colors whitespace-nowrap border flex items-center gap-1"
+              :class="selectedAllergenFilter === allergen.id ? 'bg-red-100 text-red-800 border-red-200' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'"
+            >
+              <span>{{ allergen.icon }}</span>
+              {{ allergen.label }}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -219,7 +227,7 @@ onMounted(() => {
 
       <!-- Empty State -->
       <EmptyState
-        v-else-if="filteredProducts.length === 0 && !searchQuery"
+        v-else-if="filteredProducts.length === 0 && !searchQuery && !selectedAllergenFilter"
         icon="📦"
         title="Nessun prodotto disponibile"
         description="Al momento non ci sono prodotti disponibili in questa categoria."
@@ -227,10 +235,10 @@ onMounted(() => {
 
       <!-- Search Empty State -->
       <EmptyState
-        v-else-if="filteredProducts.length === 0 && searchQuery"
+        v-else-if="filteredProducts.length === 0"
         icon="🔍"
         title="Nessun risultato"
-        :description="`Nessun prodotto trovato per '${searchQuery}'`"
+        description="Nessun prodotto trovato con i filtri selezionati."
       />
 
       <!-- Products Grid -->
@@ -239,9 +247,7 @@ onMounted(() => {
         <div class="mb-6 flex items-end justify-between">
           <div>
             <h2 class="text-2xl font-bold text-gray-900">{{ currentCategoryName }}</h2>
-            <p class="text-sm text-gray-500 mt-1">
-              {{ filteredProducts.length }} prodotti disponibili
-            </p>
+            <p class="text-sm text-gray-500 mt-1">{{ filteredProducts.length }} prodotti disponibili</p>
           </div>
         </div>
 
@@ -270,12 +276,7 @@ onMounted(() => {
         class="bg-white text-gray-700 border border-gray-200 rounded-full p-4 shadow-lg hover:bg-gray-50 transition-transform active:scale-95 flex items-center justify-center"
       >
         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-          />
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
         </svg>
       </button>
 

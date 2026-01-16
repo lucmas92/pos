@@ -20,6 +20,7 @@ export interface Product extends ProductBase {
   category?: Category
   variants?: ProductVariant[]
   kit_items?: KitItem[]
+  allergens?: string[] | null // Aggiunto campo allergeni
 }
 
 /**
@@ -57,12 +58,16 @@ export interface CartItem {
 /**
  * Dati per creare un prodotto
  */
-export type CreateProductData = Database['public']['Tables']['products']['Insert']
+export type CreateProductData = Database['public']['Tables']['products']['Insert'] & {
+  allergens?: string[] | null
+}
 
 /**
  * Dati per aggiornare un prodotto
  */
-export type UpdateProductData = Database['public']['Tables']['products']['Update']
+export type UpdateProductData = Database['public']['Tables']['products']['Update'] & {
+  allergens?: string[] | null
+}
 
 /**
  * Dati per creare una categoria
