@@ -31,7 +31,7 @@ function getChangedFields(details: any) {
   if (!details || !details.changes) return []
   return Object.entries(details.changes).map(([key, value]) => ({
     key,
-    value
+    value,
   }))
 }
 </script>
@@ -63,16 +63,28 @@ function getChangedFields(details: any) {
         <table class="min-w-full divide-y divide-gray-100">
           <thead class="bg-gray-50">
             <tr>
-              <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider w-40">
+              <th
+                scope="col"
+                class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider w-40"
+              >
                 Data
               </th>
-              <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider w-48">
+              <th
+                scope="col"
+                class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider w-48"
+              >
                 Utente
               </th>
-              <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider w-32">
+              <th
+                scope="col"
+                class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider w-32"
+              >
                 Azione
               </th>
-              <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
+              <th
+                scope="col"
+                class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider"
+              >
                 Dettagli Modifica
               </th>
             </tr>
@@ -87,7 +99,9 @@ function getChangedFields(details: any) {
               <!-- User -->
               <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 align-top">
                 <div class="flex items-center">
-                  <div class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 mr-2 text-xs font-bold">
+                  <div
+                    class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 mr-2 text-xs font-bold"
+                  >
                     {{ (log.user_email || 'S').charAt(0).toUpperCase() }}
                   </div>
                   {{ log.user_email || 'Sistema' }}
@@ -111,35 +125,61 @@ function getChangedFields(details: any) {
 
               <!-- Details (Smart Rendering) -->
               <td class="px-6 py-4 text-sm text-gray-600 align-top">
-
                 <!-- Case: Update Product (Show changes) -->
-                <div v-if="log.action === 'UPDATE_PRODUCT' && log.details?.changes" class="space-y-1">
-                  <div v-for="field in getChangedFields(log.details)" :key="field.key" class="flex items-center gap-2">
-                    <span class="font-medium text-gray-700 bg-gray-100 px-1.5 py-0.5 rounded text-xs">{{ field.key }}</span>
+                <div
+                  v-if="log.action === 'UPDATE_PRODUCT' && log.details?.changes"
+                  class="space-y-1"
+                >
+                  <div
+                    v-for="field in getChangedFields(log.details)"
+                    :key="field.key"
+                    class="flex items-center gap-2"
+                  >
+                    <span
+                      class="font-medium text-gray-700 bg-gray-100 px-1.5 py-0.5 rounded text-xs"
+                      >{{ field.key }}</span
+                    >
                     <span class="text-gray-400">→</span>
-                    <span class="font-medium text-gray-900">{{ formatValue(field.key, field.value) }}</span>
+                    <span class="font-medium text-gray-900">{{
+                      formatValue(field.key, field.value)
+                    }}</span>
 
                     <!-- Show old price if available -->
-                    <span v-if="field.key === 'price' && log.details.old_price" class="text-xs text-gray-400 line-through ml-1">
+                    <span
+                      v-if="field.key === 'price' && log.details.old_price"
+                      class="text-xs text-gray-400 line-through ml-1"
+                    >
                       {{ formatCurrency(log.details.old_price) }}
                     </span>
                   </div>
                 </div>
 
                 <!-- Case: Update Order Status -->
-                <div v-else-if="log.action === 'UPDATE_ORDER_STATUS'" class="flex items-center gap-2">
+                <div
+                  v-else-if="log.action === 'UPDATE_ORDER_STATUS'"
+                  class="flex items-center gap-2"
+                >
                   <span class="text-gray-500">Stato:</span>
-                  <span class="px-2 py-0.5 bg-gray-100 text-gray-600 rounded text-xs line-through">{{ log.details?.old_status }}</span>
+                  <span
+                    class="px-2 py-0.5 bg-gray-100 text-gray-600 rounded text-xs line-through"
+                    >{{ log.details?.old_status }}</span
+                  >
                   <span class="text-gray-400">→</span>
-                  <span class="px-2 py-0.5 bg-blue-50 text-blue-700 rounded text-xs font-bold">{{ log.details?.new_status }}</span>
-                  <span v-if="log.details?.order_number" class="text-xs text-gray-400 ml-2">(Ordine #{{ log.details.order_number }})</span>
+                  <span class="px-2 py-0.5 bg-blue-50 text-blue-700 rounded text-xs font-bold">{{
+                    log.details?.new_status
+                  }}</span>
+                  <span v-if="log.details?.order_number" class="text-xs text-gray-400 ml-2"
+                    >(Ordine #{{ log.details.order_number }})</span
+                  >
                 </div>
 
                 <!-- Case: Create/Delete Product -->
                 <div v-else-if="log.action.includes('_PRODUCT')" class="flex items-center gap-2">
                   <span class="text-gray-500">Nome:</span>
                   <span class="font-bold text-gray-900">{{ log.details?.name || '-' }}</span>
-                  <span v-if="log.details?.price" class="text-gray-500 ml-2">Prezzo: {{ formatCurrency(log.details.price) }}</span>
+                  <span v-if="log.details?.price" class="text-gray-500 ml-2"
+                    >Prezzo: {{ formatCurrency(log.details.price) }}</span
+                  >
                 </div>
 
                 <!-- Case: Login -->
@@ -154,7 +194,6 @@ function getChangedFields(details: any) {
                     <span class="text-gray-900 truncate max-w-xs">{{ value }}</span>
                   </div>
                 </div>
-
               </td>
             </tr>
           </tbody>

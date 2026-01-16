@@ -15,4 +15,4 @@ export const ALLERGENS = [
   { id: 'molluscs', label: 'Molluschi', icon: '🐙' },
 ] as const
 
-export type AllergenId = typeof ALLERGENS[number]['id']
+export type AllergenId = (typeof ALLERGENS)[number]['id']

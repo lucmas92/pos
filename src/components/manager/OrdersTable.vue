@@ -335,9 +335,7 @@ async function handleStatusChange(
 
           <AppButton
             v-if="selectedOrder.status === 'paid'"
-            @click="
-              handleStatusChange(selectedOrder, 'completed')
-            "
+            @click="handleStatusChange(selectedOrder, 'completed')"
             variant="primary"
             class="flex-1"
           >

@@ -305,12 +305,15 @@ export const useOrdersStore = defineStore('orders', () => {
   /**
    * Aggiorna lo stato di un ordine
    */
-  async function updateOrderStatus(id: string, status: 'pending' | 'paid' | 'completed' | 'cancelled') {
+  async function updateOrderStatus(
+    id: string,
+    status: 'pending' | 'paid' | 'completed' | 'cancelled',
+  ) {
     try {
       loading.value = true
       error.value = null
 
-      const oldOrder = orders.value.find(o => o.id === id)
+      const oldOrder = orders.value.find((o) => o.id === id)
 
       const updateData: any = { status }
 
@@ -349,7 +352,7 @@ export const useOrdersStore = defineStore('orders', () => {
       await logAction('UPDATE_ORDER_STATUS', 'order', id, {
         old_status: oldOrder?.status,
         new_status: status,
-        order_number: data.order_number
+        order_number: data.order_number,
       })
 
       return { success: true, data }

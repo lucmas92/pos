@@ -11,12 +11,7 @@ export function useAudit() {
   /**
    * Registra un'azione nel log
    */
-  async function logAction(
-    action: string,
-    entityType: string,
-    entityId?: string,
-    details?: any
-  ) {
+  async function logAction(action: string, entityType: string, entityId?: string, details?: any) {
     try {
       console.log('Logging action:', action)
       // Se non c'è utente loggato (es. ordine ospite), non logghiamo o logghiamo come 'system'
@@ -29,7 +24,7 @@ export function useAudit() {
         action,
         entity_type: entityType,
         entity_id: entityId,
-        details
+        details,
       })
 
       if (error) console.error('Failed to log action:', error)
@@ -63,6 +58,6 @@ export function useAudit() {
     logs,
     loading,
     logAction,
-    fetchLogs
+    fetchLogs,
   }
 }

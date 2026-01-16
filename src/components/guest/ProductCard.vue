@@ -49,7 +49,7 @@ const requiresModal = computed(() => hasVariants.value || props.product.is_kit)
 
 const productAllergens = computed(() => {
   if (!props.product.allergens) return []
-  return ALLERGENS.filter(a => props.product.allergens?.includes(a.id))
+  return ALLERGENS.filter((a) => props.product.allergens?.includes(a.id))
 })
 
 function handleAddToCart() {

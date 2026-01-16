@@ -22,14 +22,20 @@ export const useAuthStore = defineStore('auth', () => {
     try {
       loading.value = true
 
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession()
 
       if (sessionError) throw sessionError
 
       if (session?.user) {
         user.value = session.user
       } else {
-        const { data: { user: currentUser }, error: userError } = await supabase.auth.getUser()
+        const {
+          data: { user: currentUser },
+          error: userError,
+        } = await supabase.auth.getUser()
         if (!userError && currentUser) {
           user.value = currentUser
         } else {
