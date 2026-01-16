@@ -148,7 +148,7 @@ onMounted(() => {
             <button
               v-if="auth.isAuthenticated.value"
               @click="goToManager"
-              class="hidden md:flex items-center px-4 py-2 bg-red-400 hover:bg-red-800 hover:text-white text-gray-700 rounded-xl font-medium transition-colors"
+              class="hidden md:flex items-center px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded-xl font-medium transition-colors"
             >
               <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
