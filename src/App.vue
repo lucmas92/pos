@@ -6,6 +6,7 @@ import { useConfigStore } from '@/stores/config'
 import DefaultLayout from '@/layouts/DefaultLayout.vue'
 import GuestLayout from '@/layouts/GuestLayout.vue'
 import ManagerLayout from '@/layouts/ManagerLayout.vue'
+import ToastContainer from '@/components/common/ToastContainer.vue'
 
 const route = useRoute()
 const authStore = useAuthStore()
@@ -36,7 +37,10 @@ onMounted(async () => {
   authStore.subscribeToAuthChanges()
 
   // Inizializza sessione e configurazione in parallelo
-  await Promise.all([authStore.initialize(), configStore.fetchConfig()])
+  await Promise.all([
+    authStore.initialize(),
+    configStore.fetchConfig()
+  ])
 })
 </script>
 
@@ -45,5 +49,8 @@ onMounted(async () => {
     <component :is="layout">
       <RouterView />
     </component>
+
+    <!-- Global Toast Container -->
+    <ToastContainer />
   </div>
 </template>

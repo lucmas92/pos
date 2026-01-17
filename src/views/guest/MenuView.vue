@@ -14,11 +14,13 @@ import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
 import type { Product, ProductVariant } from '@/types/models'
 import { ALLERGENS } from '@/constants/allergens'
+import { useToast } from '@/composables/useToast.ts'
 
 // Composables
 const router = useRouter()
 const cart = useCart()
 const auth = useAuth()
+const toast = useToast()
 const { config } = useConfig()
 const { categories, loading: loadingCategories } = useCategories({
   onlyActive: true,
@@ -83,7 +85,7 @@ function handleAddToCart(
   quantity: number = 1,
 ) {
   if (!isOrderingOpen.value) {
-    alert('Siamo spiacenti, le ordinazioni sono momentaneamente chiuse.')
+    toast.warning('Siamo spiacenti, le ordinazioni sono momentaneamente chiuse.')
     return
   }
 
@@ -91,7 +93,7 @@ function handleAddToCart(
 
   if (result.success) {
     // Mostra messaggio di successo
-    console.log('Prodotto aggiunto al carrello')
+    toast.success('Prodotto aggiunto al carrello')
   } else {
     // Mostra errore
     alert(result.error)
@@ -309,7 +311,7 @@ onMounted(() => {
         </div>
 
         <!-- Grid -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 mb-30 gap-6">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 mb-12 gap-6">
           <ProductCard
             v-for="product in filteredProducts"
             :key="product.id"

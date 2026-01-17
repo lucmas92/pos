@@ -3,16 +3,17 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useCart } from '@/composables/useCart'
 import { useOrders } from '@/composables/useOrders'
+import { useToast } from '@/composables/useToast'
 import CartItem from '@/components/guest/CartItem.vue'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import { formatCurrency } from '@/utils/currency'
 import { saveToStorage, getFromStorage } from '@/utils/storage'
-import { useConfig } from '@/composables/useConfig.ts'
+import AppButton from '@/components/common/AppButton.vue'
 
 const router = useRouter()
 const cart = useCart()
 const orders = useOrders({ autoFetch: false })
-const { config } = useConfig()
+const toast = useToast()
 
 // State
 const guestName = ref('')
@@ -45,6 +46,7 @@ async function handleSubmit() {
   const validation = cart.validate()
   if (!validation.valid) {
     error.value = validation.error || 'Errore nella validazione'
+    toast.error(error.value)
     return
   }
 
@@ -77,6 +79,8 @@ async function handleSubmit() {
       // Svuota carrello
       cart.clear()
 
+      toast.success('Ordine inviato con successo!')
+
       // Redirect a success page
       router.push({
         name: 'order-success',
@@ -84,9 +88,11 @@ async function handleSubmit() {
       })
     } else {
       error.value = result.error || "Errore nella creazione dell'ordine"
+      toast.error(error.value)
     }
   } catch (err: any) {
     error.value = err.message || 'Errore imprevisto'
+    toast.error(error.value)
   } finally {
     isSubmitting.value = false
   }
@@ -152,7 +158,7 @@ onMounted(() => {
         <div v-if="error" class="bg-red-50 border border-red-200 rounded-lg p-4">
           <div class="flex">
             <svg
-              class="w-5 h-5 text-red-600 mr-2 flex-shrink-0"
+              class="w-5 h-5 text-red-600 mr-2 shrink-0"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -189,7 +195,7 @@ onMounted(() => {
             </div>
 
             <!-- Covers -->
-            <div class="form-group" v-if="config!.enable_covers">
+            <div class="form-group">
               <label class="form-label">
                 Numero di coperti <span class="text-red-500">*</span>
               </label>
@@ -287,7 +293,7 @@ onMounted(() => {
               <span class="text-primary-600">{{ formatCurrency(total) }}</span>
             </div>
 
-            <div v-if="config!.enable_covers" class="flex justify-between text-sm text-gray-600">
+            <div class="flex justify-between text-sm text-gray-600">
               <span>Coperti</span>
               <span>{{ cart.covers.value }}</span>
             </div>
@@ -328,12 +334,10 @@ onMounted(() => {
     <div
       class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 safe-area-inset-bottom"
     >
-      <div class="container-custom max-w-2x mx-auto mb-4">
-        <button @click="handleSubmit" :disabled="!canSubmit" class="btn btn-primary btn-lg w-full">
+        <AppButton @click="handleSubmit" class="mb-6" :disabled="!canSubmit" variant="primary" size="lg" block>
           <LoadingSpinner v-if="isSubmitting" size="sm" color="text-white" class="mr-2" />
           <span v-else> Conferma Ordine - {{ formatCurrency(total) }} </span>
-        </button>
-      </div>
+        </AppButton>
     </div>
   </div>
 </template>

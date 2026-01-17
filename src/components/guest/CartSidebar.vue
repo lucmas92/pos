@@ -227,7 +227,7 @@ function handleClear() {
         </div>
 
         <!-- Total -->
-        <div class="flex justify-between items-center mb-6 pt-4 border-t border-gray-100">
+        <div class="flex justify-between items-center mb-4 pt-4 border-t border-gray-100">
           <span class="text-xl font-bold text-gray-900">Totale</span>
           <span class="text-2xl font-bold text-primary-600">{{
             formatCurrency(cart.totalAmount.value)
