@@ -213,7 +213,10 @@ export const useProductsStore = defineStore('products', () => {
       products.value.push(data)
 
       // Audit
-      await logAction('CREATE_PRODUCT', 'product', data.id, { name: data.name, price: data.price })
+      await logAction('CREATE_PRODUCT', 'product', (data as Product).id, {
+        name: (data as Product).name,
+        price: (data as Product).price,
+      })
 
       return { success: true, data }
     } catch (err: any) {
@@ -503,7 +506,7 @@ export const useProductsStore = defineStore('products', () => {
               .single()
 
             if (data) {
-              const index = products.value.findIndex((p) => p.id === data.id)
+              const index = products.value.findIndex((p) => p.id === (data as Product).id)
               if (index > -1) {
                 products.value[index] = data
               } else {
@@ -523,7 +526,7 @@ export const useProductsStore = defineStore('products', () => {
    */
   function unsubscribeFromChanges() {
     if (realtimeChannel.value) {
-      supabase.removeChannel(realtimeChannel.value)
+      supabase.removeChannel(realtimeChannel.value as any)
       realtimeChannel.value = null
     }
   }

@@ -215,6 +215,50 @@ export interface Database {
           created_at?: string
         }
       }
+      configurations: {
+        Row: {
+          id: string
+          event_name: string
+          receipt_header: string
+          receipt_footer: string
+          logo_url: string
+          is_ordering_open: boolean
+          enable_takeaway: boolean
+          enable_covers: boolean
+          cover_price: number
+          printer_kitchen_ip: string
+          printer_bar_ip: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          event_name?: string
+          receipt_header?: string
+          receipt_footer?: string
+          logo_url?: string
+          is_ordering_open?: boolean
+          enable_takeaway?: boolean
+          enable_covers?: boolean
+          cover_price?: number
+          printer_kitchen_ip?: string
+          printer_bar_ip?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          event_name?: string
+          receipt_header?: string
+          receipt_footer?: string
+          logo_url?: string
+          is_ordering_open?: boolean
+          enable_takeaway?: boolean
+          enable_covers?: boolean
+          cover_price?: number
+          printer_kitchen_ip?: string
+          printer_bar_ip?: string
+          updated_at?: string
+        }
+      }
     }
     Views: {
       [_ in never]: never

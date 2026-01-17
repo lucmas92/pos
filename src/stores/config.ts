@@ -73,6 +73,6 @@ export const useConfigStore = defineStore('config', () => {
     loading,
     error,
     fetchConfig,
-    updateConfig
+    updateConfig,
   }
 })

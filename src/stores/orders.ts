@@ -166,7 +166,7 @@ export const useOrdersStore = defineStore('orders', () => {
   /**
    * Ottiene un ordine per ID
    */
-  async function fetchOrderById(id: string) {
+  async function fetchOrderById(id: string):Promise<{ success: boolean; data?: Order; error?: string }> {
     try {
       loading.value = true
       error.value = null
@@ -201,7 +201,7 @@ export const useOrdersStore = defineStore('orders', () => {
   /**
    * Ottiene un ordine per numero ordine
    */
-  async function fetchOrderByNumber(orderNumber: number) {
+  async function fetchOrderByNumber(orderNumber: number):Promise<{ success: boolean; data?: Order; error?: string }> {
     try {
       loading.value = true
       error.value = null
@@ -273,7 +273,7 @@ export const useOrdersStore = defineStore('orders', () => {
       // Crea gli items dell'ordine
       const orderItems = orderData.items.map((item) => ({
         ...item,
-        order_id: order.id,
+        order_id: (order as Order).id,
       }))
 
       const { data: items, error: itemsError } = await supabase
@@ -352,7 +352,7 @@ export const useOrdersStore = defineStore('orders', () => {
       await logAction('UPDATE_ORDER_STATUS', 'order', id, {
         old_status: oldOrder?.status,
         new_status: status,
-        order_number: data.order_number,
+        order_number: (data as Order).order_number,
       })
 
       return { success: true, data }
@@ -444,7 +444,7 @@ export const useOrdersStore = defineStore('orders', () => {
               .single()
 
             if (data) {
-              const index = orders.value.findIndex((o) => o.id === data.id)
+              const index = orders.value.findIndex((o) => o.id === (data as Order).id)
               if (index > -1) {
                 orders.value[index] = data
               } else {

@@ -18,6 +18,6 @@ export function useConfig(autoFetch = true) {
     loading,
     error,
     fetch: configStore.fetchConfig,
-    update: (data: UpdateConfigurationData) => configStore.updateConfig(data)
+    update: (data: UpdateConfigurationData) => configStore.updateConfig(data),
   }
 }

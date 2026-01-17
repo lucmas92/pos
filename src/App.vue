@@ -36,10 +36,7 @@ onMounted(async () => {
   authStore.subscribeToAuthChanges()
 
   // Inizializza sessione e configurazione in parallelo
-  await Promise.all([
-    authStore.initialize(),
-    configStore.fetchConfig()
-  ])
+  await Promise.all([authStore.initialize(), configStore.fetchConfig()])
 })
 </script>
 

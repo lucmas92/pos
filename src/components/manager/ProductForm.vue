@@ -5,10 +5,11 @@ import { useProducts } from '@/composables/useProducts'
 import AppInput from '@/components/common/AppInput.vue'
 import AppButton from '@/components/common/AppButton.vue'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
-import type { Database } from '@/types/supabase'
+import type { Database } from '@/types/database.types'
 import type { Product, ProductVariant } from '@/types/models'
 import { formatCurrency } from '@/utils/currency'
 import { ALLERGENS } from '@/constants/allergens'
+import type { VariantForm } from '@/types'
 
 type ProductInsert = Database['public']['Tables']['products']['Insert'] & {
   allergens?: string[] | null
@@ -82,7 +83,7 @@ function initializeData() {
   } else {
     resetForm()
     if (categories.categories.value.length > 0) {
-      form.value.category_id = categories.categories.value[0].id
+      form.value.category_id = categories.categories.value[0]!.id
     }
   }
 }
@@ -144,7 +145,7 @@ async function addVariant() {
 
   loading.value = true
   try {
-    const result = await products.variants.create({
+    const result:any = await products.variants.create({
       product_id: props.product.id,
       name: newVariant.value.name,
       price_modifier: newVariant.value.price_modifier,
@@ -199,7 +200,7 @@ async function addProductToKit(product: Product) {
       return
     }
 
-    const result = await products.kits.addItem(props.product.id, product.id, 1)
+    const result:any = await products.kits.addItem(props.product.id, product.id, 1)
     if (result.success && result.data) {
       kitItemsList.value.push(result.data)
       kitSearchQuery.value = ''

@@ -153,7 +153,7 @@ onMounted(() => {
 
             <!-- Covers -->
             <div
-              v-if="config.enable_covers"
+              v-if="config!.enable_covers"
               class="flex justify-between py-2 border-b border-gray-100"
             >
               <span class="text-gray-600">Coperti</span>

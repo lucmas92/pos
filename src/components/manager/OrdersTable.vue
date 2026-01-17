@@ -235,7 +235,7 @@ function printOrderReceipt(order: Order) {
               <div class="text-sm font-medium text-gray-900">
                 {{ order.guest_name || 'Ospite' }}
               </div>
-              <div v-if="config.enable_covers" class="text-xs text-gray-500">
+              <div v-if="config!.enable_covers" class="text-xs text-gray-500">
                 {{ order.covers }} coperti
               </div>
             </td>
@@ -434,9 +434,7 @@ function printOrderReceipt(order: Order) {
 
           <AppButton
             v-if="selectedOrder.status === 'paid'"
-            @click="
-              handleStatusChange(selectedOrder, 'completed')
-            "
+            @click="handleStatusChange(selectedOrder, 'completed')"
             variant="primary"
             class="flex-1"
           >

@@ -54,7 +54,7 @@ export function useRealtime<T = any>(options: RealtimeOptions, callback: ChangeC
         config.filter = filter
       }
 
-      channel.value.on('postgres_changes', config, callback).subscribe((status) => {
+      channel.value.on(('postgres_changes' as any), config, callback).subscribe((status) => {
         if (status === 'SUBSCRIBED') {
           isSubscribed.value = true
           error.value = null
@@ -181,7 +181,7 @@ export function useRealtimeMultiple(
   }
 
   function unsubscribe() {
-    channels.value.forEach((ch) => {
+    channels.value.forEach((ch:any) => {
       supabase.removeChannel(ch)
     })
     channels.value = []
@@ -204,6 +204,3 @@ export function useRealtimeMultiple(
     unsubscribe,
   }
 }
-database.types.ts
-enums.ts
-models.ts

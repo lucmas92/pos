@@ -126,7 +126,7 @@ function handleClear() {
       <div v-else class="flex-1 overflow-y-auto bg-gray-50">
         <!-- Coperti -->
         <div
-          v-if="config.enable_covers"
+          v-if="config!.enable_covers"
           class="p-6 bg-white border-b border-gray-100 sticky top-0 z-10 shadow-sm"
         >
           <div class="flex items-center justify-between mb-2">
@@ -220,7 +220,7 @@ function handleClear() {
             <span>Subtotale</span>
             <span>{{ formatCurrency(cart.totalAmount.value) }}</span>
           </div>
-          <div v-if="config.enable_covers" class="flex justify-between">
+          <div v-if="config!.enable_covers" class="flex justify-between">
             <span>Coperti ({{ cart.covers.value }})</span>
             <span>Incluso</span>
           </div>

@@ -189,7 +189,7 @@ onMounted(() => {
             </div>
 
             <!-- Covers -->
-            <div class="form-group" v-if="config.enable_covers">
+            <div class="form-group" v-if="config!.enable_covers">
               <label class="form-label">
                 Numero di coperti <span class="text-red-500">*</span>
               </label>
@@ -287,7 +287,7 @@ onMounted(() => {
               <span class="text-primary-600">{{ formatCurrency(total) }}</span>
             </div>
 
-            <div v-if="config.enable_covers" class="flex justify-between text-sm text-gray-600">
+            <div v-if="config!.enable_covers" class="flex justify-between text-sm text-gray-600">
               <span>Coperti</span>
               <span>{{ cart.covers.value }}</span>
             </div>
@@ -298,7 +298,7 @@ onMounted(() => {
         <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
           <div class="flex">
             <svg
-              class="w-5 h-5 text-blue-600 mr-3 flex-shrink-0 mt-0.5"
+              class="w-5 h-5 text-blue-600 mr-3 shrink-0 mt-0.5"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"

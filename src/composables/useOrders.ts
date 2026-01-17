@@ -92,7 +92,9 @@ export function useOrders(options?: {
   /**
    * Ottiene un ordine per numero ordine
    */
-  async function fetchByNumber(orderNumber: number) {
+  async function fetchByNumber(
+    orderNumber: number,
+  ): Promise<{ success: boolean; data?: Order; error?: string }> {
     return await ordersStore.fetchOrderByNumber(orderNumber)
   }
 
@@ -404,8 +406,10 @@ export function useOrders(options?: {
       .filter((o) => o.status !== 'cancelled')
       .forEach((order) => {
         const hour = new Date(order.created_at).getHours()
-        hourlyData[hour].orders_count++
-        hourlyData[hour].revenue += order.total_amount
+        if (hourlyData[hour]) {
+          hourlyData[hour].orders_count++
+          hourlyData[hour].revenue += order.total_amount
+        }
       })
 
     return hourlyData.filter((h) => h.orders_count > 0)

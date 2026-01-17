@@ -60,7 +60,6 @@ function getChangedFields(details: any) {
     <!-- Logs Table -->
     <div v-else class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
       <div class="overflow-x-auto">
-
         <table class="min-w-full divide-y divide-gray-100">
           <thead class="bg-gray-50">
             <tr>
