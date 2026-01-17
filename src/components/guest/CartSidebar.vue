@@ -5,6 +5,7 @@ import { useCart } from '@/composables/useCart'
 import CartItem from '@/components/guest/CartItem.vue'
 import { formatCurrency } from '@/utils/currency'
 import AppButton from '@/components/common/AppButton.vue'
+import { useConfig } from '@/composables/useConfig.ts'
 
 interface Props {
   show: boolean
@@ -14,14 +15,17 @@ interface Emits {
   (e: 'close'): void
 }
 
-const props = defineProps<Props>()
+defineProps<Props>()
 const emit = defineEmits<Emits>()
+const { config } = useConfig()
 
 const router = useRouter()
 const cart = useCart()
 
+const isOrderingOpen = computed(() => config.value?.is_ordering_open ?? true)
+
 const canCheckout = computed(() => {
-  return !cart.isEmpty.value && cart.covers.value >= 1
+  return isOrderingOpen.value && !cart.isEmpty.value && cart.covers.value >= 1
 })
 
 function handleClose() {
@@ -63,6 +67,13 @@ function handleClear() {
       v-if="show"
       class="fixed top-0 right-0 h-full w-full md:w-[450px] bg-white shadow-2xl z-50 flex flex-col"
     >
+      <!-- Service Closed Banner -->
+      <div
+        v-if="!isOrderingOpen"
+        class="md:hidden bg-red-600 text-white text-center py-2 px-4 font-bold text-sm sticky top-0 z-50"
+      >
+        ⚠️ Le ordinazioni sono momentaneamente chiuse
+      </div>
       <!-- Header -->
       <div class="flex items-center justify-between p-6 border-b border-gray-100 bg-white z-10">
         <div>
@@ -114,7 +125,10 @@ function handleClear() {
       <!-- Cart Items -->
       <div v-else class="flex-1 overflow-y-auto bg-gray-50">
         <!-- Coperti -->
-        <div class="p-6 bg-white border-b border-gray-100 sticky top-0 z-10 shadow-sm">
+        <div
+          v-if="config.enable_covers"
+          class="p-6 bg-white border-b border-gray-100 sticky top-0 z-10 shadow-sm"
+        >
           <div class="flex items-center justify-between mb-2">
             <label class="text-sm font-bold text-gray-700">Numero di coperti</label>
             <span class="text-xs text-gray-400">Obbligatorio</span>
@@ -206,7 +220,7 @@ function handleClear() {
             <span>Subtotale</span>
             <span>{{ formatCurrency(cart.totalAmount.value) }}</span>
           </div>
-          <div class="flex justify-between">
+          <div v-if="config.enable_covers" class="flex justify-between">
             <span>Coperti ({{ cart.covers.value }})</span>
             <span>Incluso</span>
           </div>

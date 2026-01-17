@@ -6,6 +6,7 @@ import AppModal from '@/components/common/AppModal.vue'
 import AppButton from '@/components/common/AppButton.vue'
 import { formatCurrency } from '@/utils/currency.ts'
 import { formatDate } from '@/utils/date.ts'
+import { useConfig } from '@/composables/useConfig.ts'
 
 interface Props {
   orders: Order[]
@@ -19,6 +20,7 @@ const props = defineProps<Props>()
 const emit = defineEmits<Emits>()
 
 const { updateStatus } = useOrders()
+const { config } = useConfig()
 
 // State
 const selectedOrder = ref<Order | null>(null)
@@ -35,14 +37,18 @@ const sortedOrders = computed(() => {
 })
 
 // Watch for changes in the orders list to update the selected order if it's open
-watch(() => props.orders, (newOrders) => {
-  if (selectedOrder.value && showDetails.value) {
-    const updatedOrder = newOrders.find(o => o.id === selectedOrder.value!.id)
-    if (updatedOrder) {
-      selectedOrder.value = updatedOrder
+watch(
+  () => props.orders,
+  (newOrders) => {
+    if (selectedOrder.value && showDetails.value) {
+      const updatedOrder = newOrders.find((o) => o.id === selectedOrder.value!.id)
+      if (updatedOrder) {
+        selectedOrder.value = updatedOrder
+      }
     }
-  }
-}, { deep: true })
+  },
+  { deep: true },
+)
 
 // Methods
 function toggleSort() {
@@ -54,7 +60,11 @@ function handleViewDetails(order: Order) {
   showDetails.value = true
 }
 
-async function handleStatusChange(order: Order, status: 'pending' | 'paid' | 'completed' | 'cancelled') {
+async function handleStatusChange(
+  order: Order,
+  status: 'pending' | 'paid' | 'completed' | 'cancelled',
+) {
+  showDetails.value = false
   if (status === 'cancelled' && !confirm('Sei sicuro di voler annullare questo ordine?')) return
 
   await updateStatus(order.id, status)
@@ -75,13 +85,17 @@ function printOrderReceipt(order: Order) {
   const printWindow = window.open('', '', 'width=400,height=600')
   if (!printWindow) return
 
-  const itemsHtml = order.items?.map(item => `
+  const itemsHtml = order.items
+    ?.map(
+      (item) => `
     <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
       <span>${item.quantity}x ${item.product?.name} ${item.variant ? `(${item.variant.name})` : ''}</span>
       <span>${formatCurrency(item.unit_price * item.quantity)}</span>
     </div>
     ${item.notes ? `<div style="font-size: 10px; font-style: italic; margin-bottom: 5px;">Note: ${item.notes}</div>` : ''}
-  `).join('')
+  `,
+    )
+    .join('')
 
   // QR Code URL (using a public API for simplicity, encoding the Order ID)
   const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${order.id}`
@@ -146,16 +160,28 @@ function printOrderReceipt(order: Order) {
       <table class="min-w-full divide-y divide-gray-100">
         <thead class="bg-gray-50">
           <tr>
-            <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
+            <th
+              scope="col"
+              class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider"
+            >
               Ordine
             </th>
-            <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
+            <th
+              scope="col"
+              class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider"
+            >
               Ospite
             </th>
-            <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
+            <th
+              scope="col"
+              class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider"
+            >
               Totale
             </th>
-            <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
+            <th
+              scope="col"
+              class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider"
+            >
               Stato
             </th>
             <th
@@ -172,7 +198,12 @@ function printOrderReceipt(order: Order) {
                   stroke="currentColor"
                   viewBox="0 0 24 24"
                 >
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M19 9l-7 7-7-7"
+                  />
                 </svg>
               </div>
             </th>
@@ -182,11 +213,18 @@ function printOrderReceipt(order: Order) {
           </tr>
         </thead>
         <tbody class="bg-white divide-y divide-gray-100">
-          <tr v-for="order in sortedOrders" :key="order.id" class="hover:bg-gray-50 transition-colors cursor-pointer" @click="handleViewDetails(order)">
+          <tr
+            v-for="order in sortedOrders"
+            :key="order.id"
+            class="hover:bg-gray-50 transition-colors cursor-pointer"
+            @click="handleViewDetails(order)"
+          >
             <!-- Order Number -->
             <td class="px-6 py-4 whitespace-nowrap">
               <div class="flex items-center">
-                <div class="h-10 w-10 flex-shrink-0 rounded-lg bg-primary-50 flex items-center justify-center text-primary-700 font-bold">
+                <div
+                  class="h-10 w-10 flex-shrink-0 rounded-lg bg-primary-50 flex items-center justify-center text-primary-700 font-bold"
+                >
                   #{{ order.order_number }}
                 </div>
               </div>
@@ -194,8 +232,12 @@ function printOrderReceipt(order: Order) {
 
             <!-- Guest -->
             <td class="px-6 py-4 whitespace-nowrap">
-              <div class="text-sm font-medium text-gray-900">{{ order.guest_name || 'Ospite' }}</div>
-              <div class="text-xs text-gray-500">{{ order.covers }} coperti</div>
+              <div class="text-sm font-medium text-gray-900">
+                {{ order.guest_name || 'Ospite' }}
+              </div>
+              <div v-if="config.enable_covers" class="text-xs text-gray-500">
+                {{ order.covers }} coperti
+              </div>
             </td>
 
             <!-- Total -->
@@ -211,13 +253,17 @@ function printOrderReceipt(order: Order) {
                   'bg-yellow-100 text-yellow-800': order.status === 'pending',
                   'bg-blue-100 text-blue-800': order.status === 'paid',
                   'bg-green-100 text-green-800': order.status === 'completed',
-                  'bg-red-100 text-red-800': order.status === 'cancelled'
+                  'bg-red-100 text-red-800': order.status === 'cancelled',
                 }"
               >
                 {{
-                  order.status === 'pending' ? 'In attesa' :
-                  order.status === 'paid' ? 'Pagato' :
-                  order.status === 'completed' ? 'Completato' : 'Annullato'
+                  order.status === 'pending'
+                    ? 'In attesa'
+                    : order.status === 'paid'
+                      ? 'Pagato'
+                      : order.status === 'completed'
+                        ? 'Completato'
+                        : 'Annullato'
                 }}
               </span>
             </td>
@@ -238,7 +284,12 @@ function printOrderReceipt(order: Order) {
                   title="Segna come Pagato e Stampa"
                 >
                   <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"
+                    />
                   </svg>
                 </button>
 
@@ -250,7 +301,12 @@ function printOrderReceipt(order: Order) {
                   title="Stampa Scontrino"
                 >
                   <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"
+                    />
                   </svg>
                 </button>
 
@@ -262,7 +318,12 @@ function printOrderReceipt(order: Order) {
                   title="Completa"
                 >
                   <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M5 13l4 4L19 7"
+                    />
                   </svg>
                 </button>
 
@@ -274,7 +335,12 @@ function printOrderReceipt(order: Order) {
                   title="Annulla"
                 >
                   <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M6 18L18 6M6 6l12 12"
+                    />
                   </svg>
                 </button>
               </div>
@@ -321,16 +387,23 @@ function printOrderReceipt(order: Order) {
                 <div>
                   <p class="font-medium text-gray-900">{{ item.product?.name }}</p>
                   <p v-if="item.variant" class="text-xs text-gray-500">{{ item.variant.name }}</p>
-                  <p v-if="item.notes" class="text-xs text-orange-600 italic mt-0.5">Note: {{ item.notes }}</p>
+                  <p v-if="item.notes" class="text-xs text-orange-600 italic mt-0.5">
+                    Note: {{ item.notes }}
+                  </p>
                 </div>
               </div>
-              <p class="font-medium text-gray-900">{{ formatCurrency(item.unit_price * item.quantity) }}</p>
+              <p class="font-medium text-gray-900">
+                {{ formatCurrency(item.unit_price * item.quantity) }}
+              </p>
             </div>
           </div>
         </div>
 
         <!-- Order Notes -->
-        <div v-if="selectedOrder.notes" class="bg-yellow-50 p-4 rounded-xl border border-yellow-100">
+        <div
+          v-if="selectedOrder.notes"
+          class="bg-yellow-50 p-4 rounded-xl border border-yellow-100"
+        >
           <h4 class="text-sm font-bold text-yellow-800 mb-1">Note Ordine</h4>
           <p class="text-sm text-yellow-700">{{ selectedOrder.notes }}</p>
         </div>
@@ -338,7 +411,9 @@ function printOrderReceipt(order: Order) {
         <!-- Total -->
         <div class="flex justify-between items-center pt-4 border-t border-gray-100">
           <span class="text-lg font-bold text-gray-900">Totale</span>
-          <span class="text-2xl font-bold text-primary-600">{{ formatCurrency(selectedOrder.total_amount) }}</span>
+          <span class="text-2xl font-bold text-primary-600">{{
+            formatCurrency(selectedOrder.total_amount)
+          }}</span>
         </div>
       </div>
 
@@ -350,7 +425,7 @@ function printOrderReceipt(order: Order) {
 
           <AppButton
             v-if="selectedOrder.status === 'pending'"
-            @click="handleStatusChange(selectedOrder, 'paid'); showDetails = false"
+            @click="handleStatusChange(selectedOrder, 'paid')"
             variant="primary"
             class="flex-1 bg-blue-600 hover:bg-blue-700 focus:ring-blue-500"
           >
@@ -359,7 +434,9 @@ function printOrderReceipt(order: Order) {
 
           <AppButton
             v-if="selectedOrder.status === 'paid'"
-            @click="handleStatusChange(selectedOrder, 'completed'); showDetails = false"
+            @click="
+              handleStatusChange(selectedOrder, 'completed')
+            "
             variant="primary"
             class="flex-1"
           >

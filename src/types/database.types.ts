@@ -155,7 +155,7 @@ export interface Database {
           guest_name: string | null
           covers: number
           total_amount: number
-          status: 'pending' | 'completed' | 'cancelled'
+          status: 'pending' | 'completed' | 'cancelled' | 'paid'
           notes: string | null
           created_at: string
           completed_at: string | null

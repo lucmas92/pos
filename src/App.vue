@@ -2,17 +2,18 @@
 import { computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { useConfigStore } from '@/stores/config'
 import DefaultLayout from '@/layouts/DefaultLayout.vue'
 import GuestLayout from '@/layouts/GuestLayout.vue'
 import ManagerLayout from '@/layouts/ManagerLayout.vue'
 
 const route = useRoute()
 const authStore = useAuthStore()
+const configStore = useConfigStore()
 
 // Determina quale layout usare in base alla route
 const layout = computed(() => {
   // Se la query param 'fullscreen' è presente, usa un layout vuoto (DefaultLayout)
-  // Questo è utile per la Kitchen View
   if (route.query.fullscreen === 'true') {
     return DefaultLayout
   }
@@ -29,13 +30,16 @@ const layout = computed(() => {
   }
 })
 
-// Inizializza l'autenticazione all'avvio
+// Inizializza l'autenticazione e la configurazione all'avvio
 onMounted(async () => {
   // Sottoscrivi ai cambiamenti PRIMA di inizializzare per catturare eventuali eventi iniziali
   authStore.subscribeToAuthChanges()
 
-  // Inizializza la sessione
-  await authStore.initialize()
+  // Inizializza sessione e configurazione in parallelo
+  await Promise.all([
+    authStore.initialize(),
+    configStore.fetchConfig()
+  ])
 })
 </script>
 

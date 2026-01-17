@@ -6,11 +6,13 @@ import { useOrders } from '@/composables/useOrders'
 import CartItem from '@/components/guest/CartItem.vue'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import { formatCurrency } from '@/utils/currency'
-import { saveToStorage, getFromStorage, STORAGE_KEYS } from '@/utils/storage'
+import { saveToStorage, getFromStorage } from '@/utils/storage'
+import { useConfig } from '@/composables/useConfig.ts'
 
 const router = useRouter()
 const cart = useCart()
 const orders = useOrders({ autoFetch: false })
+const { config } = useConfig()
 
 // State
 const guestName = ref('')
@@ -187,7 +189,7 @@ onMounted(() => {
             </div>
 
             <!-- Covers -->
-            <div class="form-group">
+            <div class="form-group" v-if="config.enable_covers">
               <label class="form-label">
                 Numero di coperti <span class="text-red-500">*</span>
               </label>
@@ -285,7 +287,7 @@ onMounted(() => {
               <span class="text-primary-600">{{ formatCurrency(total) }}</span>
             </div>
 
-            <div class="flex justify-between text-sm text-gray-600">
+            <div v-if="config.enable_covers" class="flex justify-between text-sm text-gray-600">
               <span>Coperti</span>
               <span>{{ cart.covers.value }}</span>
             </div>
@@ -326,7 +328,7 @@ onMounted(() => {
     <div
       class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 safe-area-inset-bottom"
     >
-      <div class="container-custom max-w-2xl mx-auto">
+      <div class="container-custom max-w-2x mx-auto mb-4">
         <button @click="handleSubmit" :disabled="!canSubmit" class="btn btn-primary btn-lg w-full">
           <LoadingSpinner v-if="isSubmitting" size="sm" color="text-white" class="mr-2" />
           <span v-else> Conferma Ordine - {{ formatCurrency(total) }} </span>

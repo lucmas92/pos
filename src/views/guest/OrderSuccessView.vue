@@ -6,10 +6,12 @@ import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import { formatCurrency } from '@/utils/currency'
 import { formatDateTime } from '@/utils/date'
 import type { Order } from '@/types/models'
+import { useConfig } from '@/composables/useConfig.ts'
 
 const route = useRoute()
 const router = useRouter()
 const orders = useOrders({ autoFetch: false })
+const { config } = useConfig()
 
 // State
 const order = ref<Order | null>(null)
@@ -150,7 +152,10 @@ onMounted(() => {
             </div>
 
             <!-- Covers -->
-            <div class="flex justify-between py-2 border-b border-gray-100">
+            <div
+              v-if="config.enable_covers"
+              class="flex justify-between py-2 border-b border-gray-100"
+            >
               <span class="text-gray-600">Coperti</span>
               <span class="font-medium text-gray-900">{{ order.covers }}</span>
             </div>
