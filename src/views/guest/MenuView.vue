@@ -90,7 +90,7 @@ function handleAddToCart(
   const result = cart.addToCart(product, variant, notes, quantity)
 
   if (result.success) {
-    // Feedback successo (toast o animazione)
+    // Mostra messaggio di successo
     console.log('Prodotto aggiunto al carrello')
   } else {
     // Mostra errore

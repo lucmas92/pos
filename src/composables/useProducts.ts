@@ -63,8 +63,6 @@ export function useProducts(options?: {
    */
   async function fetch() {
     if (categoryId) {
-      console.log('Fetching products by category')
-
       const result = await productsStore.fetchProductsByCategory(categoryId)
       if (result.success && result.data) {
         categoryProducts.value = result.data
@@ -73,10 +71,8 @@ export function useProducts(options?: {
     }
 
     if (onlyAvailable) {
-      console.log('Fetching available products')
       return await productsStore.fetchAvailableProducts()
     }
-    console.log('Fetching all products')
 
     return await productsStore.fetchProducts()
   }
@@ -260,7 +256,6 @@ export function useProducts(options?: {
 
   // Lifecycle hooks
   onMounted(async () => {
-    console.log('useProducts mounted')
     if (autoFetch && productsList.value.length === 0) {
       await fetch()
     }

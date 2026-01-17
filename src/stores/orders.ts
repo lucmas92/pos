@@ -399,7 +399,6 @@ export const useOrdersStore = defineStore('orders', () => {
    * Sottoscrivi agli aggiornamenti real-time
    */
   function subscribeToChanges() {
-    console.log('Subscribing to changes')
     realtimeChannel.value = supabase
       .channel('orders_changes')
       .on(

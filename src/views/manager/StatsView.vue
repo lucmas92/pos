@@ -2,19 +2,20 @@
 import { ref, computed, onMounted } from 'vue'
 import { useOrders } from '@/composables/useOrders'
 import { useProducts } from '@/composables/useProducts'
+import { useExport } from '@/composables/useExport'
 import StatsCards from '@/components/manager/StatsCards.vue'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import AppButton from '@/components/common/AppButton.vue'
 import { formatCurrency } from '@/utils/currency'
 import { formatNumber } from '@/utils/helpers'
-import type { TimeRange } from '@/types/enums'
 
 const orders = useOrders({ autoFetch: true })
 const products = useProducts({ autoFetch: true })
+const { exportOrdersReport, exportFinancialReport, exportProductSales, exporting } = useExport()
 
 // State
-const timeRange = ref<TimeRange>('today' as TimeRange)
 const loading = ref(false)
+const showExportMenu = ref(false)
 
 // Computed
 const dashboardStats = computed(() => {
@@ -33,7 +34,7 @@ const dashboardStats = computed(() => {
     averageOrderValue: orders.averageOrderValue.value,
 
     totalProducts: products.productsCount.value,
-    activeProducts: products.products.value.filter((p) => p.is_active).length,
+    activeProducts: products.products.value.filter(p => p.is_active).length,
     outOfStock: products.outOfStockProducts.value.length,
     lowStock: products.lowStockProducts.value.length,
 
@@ -49,7 +50,7 @@ const dashboardStats = computed(() => {
 })
 
 const topProducts = computed(() => {
-  return orders.getTopProducts(5)
+  return orders.getTopProducts(10)
 })
 
 const revenueByCategory = computed(() => {
@@ -79,9 +80,20 @@ const revenueByCategory = computed(() => {
 })
 
 // Methods
-async function handleExport() {
-  // TODO: Implementare export CSV/Excel
-  alert('Funzionalità export in arrivo!')
+function toggleExportMenu() {
+  showExportMenu.value = !showExportMenu.value
+}
+
+async function handleExport(type: 'orders' | 'financial' | 'products') {
+  showExportMenu.value = false
+
+  if (type === 'orders') {
+    await exportOrdersReport()
+  } else if (type === 'financial') {
+    await exportFinancialReport()
+  } else if (type === 'products') {
+    await exportProductSales()
+  }
 }
 
 onMounted(() => {
@@ -90,24 +102,53 @@ onMounted(() => {
 </script>
 
 <template>
-  <div>
+  <div @click="showExportMenu = false">
     <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
       <div>
         <h1 class="text-3xl font-bold text-gray-900">Statistiche</h1>
         <p class="text-gray-500 mt-1">Analisi e report dettagliati</p>
       </div>
-      <AppButton @click="handleExport" variant="secondary">
-        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-          />
-        </svg>
-        Esporta Report
-      </AppButton>
+
+      <div class="relative">
+        <AppButton @click.stop="toggleExportMenu" :disabled="exporting" variant="secondary">
+          <LoadingSpinner v-if="exporting" size="sm" class="mr-2" />
+          <svg v-else class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          {{ exporting ? 'Esportazione...' : 'Esporta Report' }}
+          <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+          </svg>
+        </AppButton>
+
+        <!-- Dropdown Menu -->
+        <div
+          v-if="showExportMenu"
+          class="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-100 z-50 overflow-hidden animate-fade-in"
+        >
+          <div class="py-1">
+            <button
+              @click="handleExport('orders')"
+              class="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 flex items-center"
+            >
+              <span class="mr-2">📋</span> Dettaglio Ordini
+            </button>
+            <button
+              @click="handleExport('financial')"
+              class="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 flex items-center"
+            >
+              <span class="mr-2">💰</span> Report Finanziario
+            </button>
+            <button
+              @click="handleExport('products')"
+              class="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 flex items-center"
+            >
+              <span class="mr-2">🍔</span> Vendite per Prodotto
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Loading -->
@@ -125,25 +166,12 @@ onMounted(() => {
         <div class="card h-full">
           <div class="flex items-center justify-between mb-6">
             <h2 class="text-xl font-bold text-gray-900">🏆 Prodotti Più Venduti</h2>
-            <span class="text-sm text-gray-500">Top 5</span>
+            <span class="text-sm text-gray-500">Top 10</span>
           </div>
 
-          <div
-            v-if="topProducts.length === 0"
-            class="flex flex-col items-center justify-center h-64 text-gray-400"
-          >
-            <svg
-              class="w-12 h-12 mb-3 opacity-50"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-              />
+          <div v-if="topProducts.length === 0" class="flex flex-col items-center justify-center h-64 text-gray-400">
+            <svg class="w-12 h-12 mb-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
             </svg>
             <p>Nessun dato disponibile</p>
           </div>
@@ -177,28 +205,10 @@ onMounted(() => {
             <h2 class="text-xl font-bold text-gray-900">📊 Incasso per Categoria</h2>
           </div>
 
-          <div
-            v-if="revenueByCategory.length === 0"
-            class="flex flex-col items-center justify-center h-64 text-gray-400"
-          >
-            <svg
-              class="w-12 h-12 mb-3 opacity-50"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"
-              />
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"
-              />
+          <div v-if="revenueByCategory.length === 0" class="flex flex-col items-center justify-center h-64 text-gray-400">
+            <svg class="w-12 h-12 mb-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" />
             </svg>
             <p>Nessun dato disponibile</p>
           </div>
@@ -208,9 +218,7 @@ onMounted(() => {
               <div class="flex items-center justify-between text-sm">
                 <div class="flex items-center">
                   <span class="font-bold text-gray-900 mr-2">{{ category.name }}</span>
-                  <span class="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full"
-                    >{{ category.items }} pz</span
-                  >
+                  <span class="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">{{ category.items }} pz</span>
                 </div>
                 <span class="font-bold text-gray-900">{{ formatCurrency(category.revenue) }}</span>
               </div>
@@ -230,18 +238,8 @@ onMounted(() => {
         <!-- Orders Summary -->
         <div class="card">
           <h3 class="text-lg font-bold text-gray-900 mb-5 flex items-center">
-            <svg
-              class="w-5 h-5 mr-2 text-gray-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-              />
+            <svg class="w-5 h-5 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
             </svg>
             Riepilogo Ordini
           </h3>
@@ -272,39 +270,23 @@ onMounted(() => {
         <!-- Revenue Summary -->
         <div class="card">
           <h3 class="text-lg font-bold text-gray-900 mb-5 flex items-center">
-            <svg
-              class="w-5 h-5 mr-2 text-gray-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
+            <svg class="w-5 h-5 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             Riepilogo Incassi
           </h3>
           <div class="space-y-4">
             <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
               <span class="text-gray-600 text-sm font-medium">Totale</span>
-              <span class="font-bold text-gray-900">{{
-                formatCurrency(dashboardStats.totalRevenue)
-              }}</span>
+              <span class="font-bold text-gray-900">{{ formatCurrency(dashboardStats.totalRevenue) }}</span>
             </div>
             <div class="flex justify-between items-center p-3 bg-green-50 rounded-lg">
               <span class="text-green-700 text-sm font-medium">Oggi</span>
-              <span class="font-bold text-green-700">{{
-                formatCurrency(dashboardStats.todayRevenue)
-              }}</span>
+              <span class="font-bold text-green-700">{{ formatCurrency(dashboardStats.todayRevenue) }}</span>
             </div>
             <div class="flex justify-between items-center p-3 bg-blue-50 rounded-lg">
               <span class="text-blue-700 text-sm font-medium">Scontrino medio</span>
-              <span class="font-bold text-blue-700">{{
-                formatCurrency(dashboardStats.averageOrderValue)
-              }}</span>
+              <span class="font-bold text-blue-700">{{ formatCurrency(dashboardStats.averageOrderValue) }}</span>
             </div>
           </div>
         </div>
@@ -312,39 +294,23 @@ onMounted(() => {
         <!-- Covers Summary -->
         <div class="card">
           <h3 class="text-lg font-bold text-gray-900 mb-5 flex items-center">
-            <svg
-              class="w-5 h-5 mr-2 text-gray-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-              />
+            <svg class="w-5 h-5 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
             </svg>
             Riepilogo Coperti
           </h3>
           <div class="space-y-4">
             <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
               <span class="text-gray-600 text-sm font-medium">Totali</span>
-              <span class="font-bold text-gray-900">{{
-                formatNumber(dashboardStats.totalCovers)
-              }}</span>
+              <span class="font-bold text-gray-900">{{ formatNumber(dashboardStats.totalCovers) }}</span>
             </div>
             <div class="flex justify-between items-center p-3 bg-blue-50 rounded-lg">
               <span class="text-blue-700 text-sm font-medium">Oggi</span>
-              <span class="font-bold text-blue-700">{{
-                formatNumber(dashboardStats.todayCovers)
-              }}</span>
+              <span class="font-bold text-blue-700">{{ formatNumber(dashboardStats.todayCovers) }}</span>
             </div>
             <div class="flex justify-between items-center p-3 bg-purple-50 rounded-lg">
               <span class="text-purple-700 text-sm font-medium">Media per ordine</span>
-              <span class="font-bold text-purple-700">{{
-                dashboardStats.averageCoversPerOrder.toFixed(1)
-              }}</span>
+              <span class="font-bold text-purple-700">{{ dashboardStats.averageCoversPerOrder.toFixed(1) }}</span>
             </div>
           </div>
         </div>

@@ -17,7 +17,6 @@ export function useAuth() {
    */
   async function login(email: string, password: string) {
     const result = await authStore.login(email, password)
-    console.log('Login result:', result)
 
     if (result.success) {
       // Redirect alla dashboard dopo login

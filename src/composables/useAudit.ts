@@ -13,7 +13,6 @@ export function useAudit() {
    */
   async function logAction(action: string, entityType: string, entityId?: string, details?: any) {
     try {
-      console.log('Logging action:', action)
       // Se non c'è utente loggato (es. ordine ospite), non logghiamo o logghiamo come 'system'
       // Ma per ora logghiamo solo azioni manageriali
       if (!authStore.user) return

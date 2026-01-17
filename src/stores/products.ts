@@ -127,7 +127,6 @@ export const useProductsStore = defineStore('products', () => {
         .gt('quantity_available', 0)
         .order('display_order', { ascending: true })
 
-      console.log('fetchAvailableProducts:', data, fetchError)
       if (fetchError) throw fetchError
 
       products.value = data || []
