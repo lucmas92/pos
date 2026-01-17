@@ -91,7 +91,7 @@ function clearFilters() {
     </div>
 
     <!-- Stats -->
-    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
+    <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4 mb-6">
       <div class="card text-center">
         <p class="text-sm text-gray-600">Totali</p>
         <p class="text-3xl font-bold text-gray-900 mt-1">{{ stats.all }}</p>

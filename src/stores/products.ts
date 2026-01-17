@@ -117,7 +117,7 @@ export const useProductsStore = defineStore('products', () => {
           *,
           category:categories(*),
           variants:product_variants(*),
-          kit_items(
+          kit_items!kit_items_included_product_id_fkey(
             *,
             product:included_product_id(*)
           )
@@ -127,6 +127,7 @@ export const useProductsStore = defineStore('products', () => {
         .gt('quantity_available', 0)
         .order('display_order', { ascending: true })
 
+      console.log('fetchAvailableProducts:', data, fetchError)
       if (fetchError) throw fetchError
 
       products.value = data || []
