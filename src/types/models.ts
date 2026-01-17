@@ -12,6 +12,7 @@ export type ProductVariant = Database['public']['Tables']['product_variants']['R
 export type KitItemBase = Database['public']['Tables']['kit_items']['Row']
 export type OrderBase = Database['public']['Tables']['orders']['Row']
 export type OrderItemBase = Database['public']['Tables']['order_items']['Row']
+export type Configuration = Database['public']['Tables']['configurations']['Row']
 
 /**
  * Audit Log
@@ -124,3 +125,8 @@ export type CreateVariantData = Database['public']['Tables']['product_variants']
  * Dati per aggiornare una variante
  */
 export type UpdateVariantData = Database['public']['Tables']['product_variants']['Update']
+
+/**
+ * Dati per aggiornare la configurazione
+ */
+export type UpdateConfigurationData = Database['public']['Tables']['configurations']['Update']

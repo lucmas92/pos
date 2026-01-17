@@ -73,15 +73,15 @@ const router = createRouter({
       meta: { requiresAuth: true, layout: 'manager' },
     },
     {
-      path: '/manager/scan',
-      name: 'manager-scan',
-      component: () => import('@/views/manager/ScanView.vue'),
-      meta: { requiresAuth: true, layout: 'default' }, // Layout vuoto per fullscreen
-    },
-    {
       path: '/manager/audit',
       name: 'manager-audit',
       component: () => import('@/views/manager/AuditView.vue'),
+      meta: { requiresAuth: true, layout: 'manager' },
+    },
+    {
+      path: '/manager/settings',
+      name: 'manager-settings',
+      component: () => import('@/views/manager/SettingsView.vue'),
       meta: { requiresAuth: true, layout: 'manager' },
     },
 
