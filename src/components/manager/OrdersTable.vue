@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue'
 import { useOrders } from '@/composables/useOrders'
+import { useConfigStore } from '@/stores/config'
 import type { Order } from '@/types/models'
 import AppModal from '@/components/common/AppModal.vue'
 import AppButton from '@/components/common/AppButton.vue'
 import { formatCurrency } from '@/utils/currency.ts'
 import { formatDate } from '@/utils/date.ts'
-import { useConfig } from '@/composables/useConfig.ts'
 
 interface Props {
   orders: Order[]
@@ -20,7 +20,7 @@ const props = defineProps<Props>()
 const emit = defineEmits<Emits>()
 
 const { updateStatus } = useOrders()
-const { config } = useConfig()
+const configStore = useConfigStore()
 
 // State
 const selectedOrder = ref<Order | null>(null)
@@ -37,18 +37,14 @@ const sortedOrders = computed(() => {
 })
 
 // Watch for changes in the orders list to update the selected order if it's open
-watch(
-  () => props.orders,
-  (newOrders) => {
-    if (selectedOrder.value && showDetails.value) {
-      const updatedOrder = newOrders.find((o) => o.id === selectedOrder.value!.id)
-      if (updatedOrder) {
-        selectedOrder.value = updatedOrder
-      }
+watch(() => props.orders, (newOrders) => {
+  if (selectedOrder.value && showDetails.value) {
+    const updatedOrder = newOrders.find(o => o.id === selectedOrder.value!.id)
+    if (updatedOrder) {
+      selectedOrder.value = updatedOrder
     }
-  },
-  { deep: true },
-)
+  }
+}, { deep: true })
 
 // Methods
 function toggleSort() {
@@ -60,11 +56,7 @@ function handleViewDetails(order: Order) {
   showDetails.value = true
 }
 
-async function handleStatusChange(
-  order: Order,
-  status: 'pending' | 'paid' | 'completed' | 'cancelled',
-) {
-  showDetails.value = false
+async function handleStatusChange(order: Order, status: 'pending' | 'paid' | 'completed' | 'cancelled') {
   if (status === 'cancelled' && !confirm('Sei sicuro di voler annullare questo ordine?')) return
 
   await updateStatus(order.id, status)
@@ -85,19 +77,26 @@ function printOrderReceipt(order: Order) {
   const printWindow = window.open('', '', 'width=400,height=600')
   if (!printWindow) return
 
-  const itemsHtml = order.items
-    ?.map(
-      (item) => `
-    <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-      <span>${item.quantity}x ${item.product?.name} ${item.variant ? `(${item.variant.name})` : ''}</span>
-      <span>${formatCurrency(item.unit_price * item.quantity)}</span>
-    </div>
-    ${item.notes ? `<div style="font-size: 10px; font-style: italic; margin-bottom: 5px;">Note: ${item.notes}</div>` : ''}
-  `,
-    )
-    .join('')
+  const config = configStore.config
+  const eventName = config?.event_name || 'Proloco POS'
+  const headerText = config?.receipt_header || 'Associazione Pro Loco'
+  const footerText = config?.receipt_footer || 'Grazie e buon appetito!'
 
-  // QR Code URL (using a public API for simplicity, encoding the Order ID)
+  const itemsHtml = order.items?.map(item => `
+    <div class="item">
+      <div class="item-row">
+        <span class="qty">${item.quantity}x</span>
+        <span class="name">
+          ${item.product?.name}
+          ${item.variant ? `<br><span class="variant">(${item.variant.name})</span>` : ''}
+        </span>
+        <span class="price">${formatCurrency(item.unit_price * item.quantity)}</span>
+      </div>
+      ${item.notes ? `<div class="notes">Note: ${item.notes}</div>` : ''}
+    </div>
+  `).join('')
+
+  // QR Code URL
   const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${order.id}`
 
   const html = `
@@ -105,41 +104,93 @@ function printOrderReceipt(order: Order) {
       <head>
         <title>Ordine #${order.order_number}</title>
         <style>
-          body { font-family: monospace; padding: 20px; max-width: 300px; margin: 0 auto; }
-          .header { text-align: center; margin-bottom: 20px; }
-          .title { font-size: 20px; font-weight: bold; }
-          .meta { font-size: 12px; margin-bottom: 10px; }
-          .divider { border-top: 1px dashed #000; margin: 10px 0; }
-          .total { font-size: 16px; font-weight: bold; text-align: right; margin-top: 10px; }
-          .qr-container { text-align: center; margin-top: 20px; }
+          @page { margin: 0; }
+          body {
+            font-family: 'Courier New', monospace;
+            width: 80mm;
+            margin: 0 auto; /* Centra il corpo nella pagina */
+            padding: 10px;
+            font-size: 12px;
+            line-height: 1.4;
+            color: #000;
+            display: flex;
+            flex-direction: column;
+            align-items: center; /* Centra il contenuto flex */
+          }
+          /* Contenitore principale per forzare la larghezza e l'allineamento */
+          .receipt-container {
+            width: 100%;
+            max-width: 80mm;
+          }
+
+          .header { text-align: center; margin-bottom: 15px; border-bottom: 1px dashed #000; padding-bottom: 10px; }
+          .logo { font-size: 18px; font-weight: bold; margin-bottom: 5px; text-transform: uppercase; }
+          .subtitle { font-size: 14px; margin-bottom: 5px; }
+          .meta { font-size: 11px; }
+
+          .info { margin-bottom: 15px; }
+          .info-row { display: flex; justify-content: space-between; }
+          .order-num { font-size: 16px; font-weight: bold; margin-bottom: 5px; text-align: center; }
+
+          .items { margin-bottom: 15px; border-bottom: 1px dashed #000; padding-bottom: 10px; }
+          .item { margin-bottom: 8px; }
+          .item-row { display: flex; align-items: flex-start; }
+          .qty { width: 25px; font-weight: bold; flex-shrink: 0; }
+          .name { flex-grow: 1; padding-right: 5px; text-align: left; }
+          .variant { font-size: 11px; font-style: italic; }
+          .price { width: 50px; text-align: right; flex-shrink: 0; }
+          .notes { font-size: 10px; font-style: italic; margin-left: 25px; margin-top: 2px; text-align: left; }
+
+          .totals { margin-bottom: 20px; }
+          .total-row { display: flex; justify-content: space-between; margin-bottom: 3px; }
+          .grand-total { font-size: 16px; font-weight: bold; margin-top: 5px; border-top: 1px solid #000; padding-top: 5px; }
+
+          .footer { text-align: center; margin-top: 20px; font-size: 11px; }
+          .qr-container { text-align: center; margin: 15px 0; }
+          .qr-code { width: 120px; height: 120px; }
+          .id-ref { font-size: 9px; color: #555; margin-top: 2px; }
         </style>
       </head>
       <body>
-        <div class="header">
-          <div class="title">Proloco POS</div>
-          <div>Sagra Paesana</div>
-        </div>
+        <div class="receipt-container">
+          <div class="header">
+            <div class="logo">${eventName}</div>
+            <div class="subtitle">${headerText}</div>
+            <div class="meta">${new Date().toLocaleString('it-IT')}</div>
+          </div>
 
-        <div class="meta">
-          <div>Ordine: <strong>#${order.order_number}</strong></div>
-          <div>Data: ${formatDate(order.created_at, true)}</div>
-        </div>
+          <div class="info">
+            <div class="order-num">ORDINE #${order.order_number}</div>
+            <div class="info-row">
+              <span>Ospite:</span>
+              <strong>${order.guest_name || 'Al banco'}</strong>
+            </div>
+          </div>
 
-        <div class="divider"></div>
+          <div class="items">
+            ${itemsHtml}
+          </div>
 
-        <div>
-          ${itemsHtml}
-        </div>
+          <div class="totals">
+            <div class="total-row">
+              <span>Coperti:</span>
+              <span>${order.covers}</span>
+            </div>
+            <div class="total-row grand-total">
+              <span>TOTALE</span>
+              <span>${formatCurrency(order.total_amount)}</span>
+            </div>
+          </div>
 
-        <div class="divider"></div>
+          <div class="qr-container">
+            <img src="${qrUrl}" class="qr-code" />
+            <div class="id-ref">${order.id}</div>
+          </div>
 
-        <div class="total">
-          TOTALE: ${formatCurrency(order.total_amount)}
-        </div>
-
-        <div class="qr-container">
-          <img src="${qrUrl}" alt="QR Code" />
-          <div style="font-size: 10px; margin-top: 5px;">ID: ${order.id}</div>
+          <div class="footer">
+            ${footerText}<br>
+            Conservare lo scontrino per il ritiro
+          </div>
         </div>
 
         <script>
@@ -160,28 +211,16 @@ function printOrderReceipt(order: Order) {
       <table class="min-w-full divide-y divide-gray-100">
         <thead class="bg-gray-50">
           <tr>
-            <th
-              scope="col"
-              class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider"
-            >
+            <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
               Ordine
             </th>
-            <th
-              scope="col"
-              class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider"
-            >
+            <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
               Ospite
             </th>
-            <th
-              scope="col"
-              class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider"
-            >
+            <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
               Totale
             </th>
-            <th
-              scope="col"
-              class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider"
-            >
+            <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
               Stato
             </th>
             <th
@@ -198,12 +237,7 @@ function printOrderReceipt(order: Order) {
                   stroke="currentColor"
                   viewBox="0 0 24 24"
                 >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M19 9l-7 7-7-7"
-                  />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                 </svg>
               </div>
             </th>
@@ -213,18 +247,11 @@ function printOrderReceipt(order: Order) {
           </tr>
         </thead>
         <tbody class="bg-white divide-y divide-gray-100">
-          <tr
-            v-for="order in sortedOrders"
-            :key="order.id"
-            class="hover:bg-gray-50 transition-colors cursor-pointer"
-            @click="handleViewDetails(order)"
-          >
+          <tr v-for="order in sortedOrders" :key="order.id" class="hover:bg-gray-50 transition-colors cursor-pointer" @click="handleViewDetails(order)">
             <!-- Order Number -->
             <td class="px-6 py-4 whitespace-nowrap">
               <div class="flex items-center">
-                <div
-                  class="h-10 w-10 flex-shrink-0 rounded-lg bg-primary-50 flex items-center justify-center text-primary-700 font-bold"
-                >
+                <div class="h-10 w-10 flex-shrink-0 rounded-lg bg-primary-50 flex items-center justify-center text-primary-700 font-bold">
                   #{{ order.order_number }}
                 </div>
               </div>
@@ -232,12 +259,8 @@ function printOrderReceipt(order: Order) {
 
             <!-- Guest -->
             <td class="px-6 py-4 whitespace-nowrap">
-              <div class="text-sm font-medium text-gray-900">
-                {{ order.guest_name || 'Ospite' }}
-              </div>
-              <div v-if="config!.enable_covers" class="text-xs text-gray-500">
-                {{ order.covers }} coperti
-              </div>
+              <div class="text-sm font-medium text-gray-900">{{ order.guest_name || 'Ospite' }}</div>
+              <div class="text-xs text-gray-500">{{ order.covers }} coperti</div>
             </td>
 
             <!-- Total -->
@@ -253,24 +276,20 @@ function printOrderReceipt(order: Order) {
                   'bg-yellow-100 text-yellow-800': order.status === 'pending',
                   'bg-blue-100 text-blue-800': order.status === 'paid',
                   'bg-green-100 text-green-800': order.status === 'completed',
-                  'bg-red-100 text-red-800': order.status === 'cancelled',
+                  'bg-red-100 text-red-800': order.status === 'cancelled'
                 }"
               >
                 {{
-                  order.status === 'pending'
-                    ? 'In attesa'
-                    : order.status === 'paid'
-                      ? 'Pagato'
-                      : order.status === 'completed'
-                        ? 'Completato'
-                        : 'Annullato'
+                  order.status === 'pending' ? 'In attesa' :
+                  order.status === 'paid' ? 'Pagato' :
+                  order.status === 'completed' ? 'Completato' : 'Annullato'
                 }}
               </span>
             </td>
 
             <!-- Date -->
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-              {{ formatDate(order.created_at) }}
+              {{ formatDate(order.created_at, true) }}
             </td>
 
             <!-- Actions -->
@@ -281,32 +300,10 @@ function printOrderReceipt(order: Order) {
                   v-if="order.status === 'pending'"
                   @click="handleStatusChange(order, 'paid')"
                   class="text-blue-600 hover:text-blue-900 p-1 rounded-lg hover:bg-blue-50 transition-colors"
-                  title="Segna come Pagato e Stampa"
+                  title="Segna come Pagato"
                 >
                   <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"
-                    />
-                  </svg>
-                </button>
-
-                <!-- Print (Always available for paid/completed) -->
-                <button
-                  v-if="order.status === 'paid' || order.status === 'completed'"
-                  @click="printOrderReceipt(order)"
-                  class="text-gray-500 hover:text-gray-700 p-1 rounded-lg hover:bg-gray-100 transition-colors"
-                  title="Stampa Scontrino"
-                >
-                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"
-                    />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
                   </svg>
                 </button>
 
@@ -318,12 +315,7 @@ function printOrderReceipt(order: Order) {
                   title="Completa"
                 >
                   <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M5 13l4 4L19 7"
-                    />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                   </svg>
                 </button>
 
@@ -335,12 +327,19 @@ function printOrderReceipt(order: Order) {
                   title="Annulla"
                 >
                   <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M6 18L18 6M6 6l12 12"
-                    />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+
+                <!-- Print (Always available for paid/completed) -->
+                <button
+                  v-if="order.status === 'paid' || order.status === 'completed'"
+                  @click="printOrderReceipt(order)"
+                  class="text-gray-500 hover:text-gray-700 p-1 rounded-lg hover:bg-gray-100 transition-colors"
+                  title="Stampa Scontrino"
+                >
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
                   </svg>
                 </button>
               </div>
@@ -387,23 +386,16 @@ function printOrderReceipt(order: Order) {
                 <div>
                   <p class="font-medium text-gray-900">{{ item.product?.name }}</p>
                   <p v-if="item.variant" class="text-xs text-gray-500">{{ item.variant.name }}</p>
-                  <p v-if="item.notes" class="text-xs text-orange-600 italic mt-0.5">
-                    Note: {{ item.notes }}
-                  </p>
+                  <p v-if="item.notes" class="text-xs text-orange-600 italic mt-0.5">Note: {{ item.notes }}</p>
                 </div>
               </div>
-              <p class="font-medium text-gray-900">
-                {{ formatCurrency(item.unit_price * item.quantity) }}
-              </p>
+              <p class="font-medium text-gray-900">{{ formatCurrency(item.unit_price * item.quantity) }}</p>
             </div>
           </div>
         </div>
 
         <!-- Order Notes -->
-        <div
-          v-if="selectedOrder.notes"
-          class="bg-yellow-50 p-4 rounded-xl border border-yellow-100"
-        >
+        <div v-if="selectedOrder.notes" class="bg-yellow-50 p-4 rounded-xl border border-yellow-100">
           <h4 class="text-sm font-bold text-yellow-800 mb-1">Note Ordine</h4>
           <p class="text-sm text-yellow-700">{{ selectedOrder.notes }}</p>
         </div>
@@ -411,9 +403,7 @@ function printOrderReceipt(order: Order) {
         <!-- Total -->
         <div class="flex justify-between items-center pt-4 border-t border-gray-100">
           <span class="text-lg font-bold text-gray-900">Totale</span>
-          <span class="text-2xl font-bold text-primary-600">{{
-            formatCurrency(selectedOrder.total_amount)
-          }}</span>
+          <span class="text-2xl font-bold text-primary-600">{{ formatCurrency(selectedOrder.total_amount) }}</span>
         </div>
       </div>
 
@@ -425,7 +415,7 @@ function printOrderReceipt(order: Order) {
 
           <AppButton
             v-if="selectedOrder.status === 'pending'"
-            @click="handleStatusChange(selectedOrder, 'paid')"
+            @click="handleStatusChange(selectedOrder, 'paid'); showDetails = false"
             variant="primary"
             class="flex-1 bg-blue-600 hover:bg-blue-700 focus:ring-blue-500"
           >
@@ -434,7 +424,7 @@ function printOrderReceipt(order: Order) {
 
           <AppButton
             v-if="selectedOrder.status === 'paid'"
-            @click="handleStatusChange(selectedOrder, 'completed')"
+            @click="handleStatusChange(selectedOrder, 'completed'); showDetails = false"
             variant="primary"
             class="flex-1"
           >
