@@ -264,6 +264,9 @@ export const useOrdersStore = defineStore('orders', () => {
         notes: item.notes || '',
       }))
 
+      console.log('Payload ordine:', orderItemsPayload)
+
+      debugger
       // Chiamata RPC a Supabase
       const { data, error } = await supabase.rpc('create_order_transaction', {
         p_guest_name: orderData.guest_name || null,
@@ -280,6 +283,15 @@ export const useOrdersStore = defineStore('orders', () => {
 
       const order = await fetchOrderById(data.order_id)
       const fullOrder = { ...order.data, items: orderItemsPayload }
+
+      // Audit (opzionale, se vogliamo tracciare anche gli ordini creati dagli ospiti, ma user_id sarà null)
+      await logAction('CREATE_ORDER', 'order', data.order_id, {
+        items: orderItemsPayload,
+        total: orderData.total_amount,
+      })
+
+      console.log('Ordine creato con successo:', fullOrder)
+      debugger;
 
       return { success: true, data: fullOrder }
     } catch (err: any) {
@@ -302,6 +314,35 @@ export const useOrdersStore = defineStore('orders', () => {
       error.value = null
 
       const oldOrder = orders.value.find((o) => o.id === id)
+
+      // Se stiamo annullando l'ordine, dobbiamo ripristinare lo stock
+      if (status === 'cancelled' && oldOrder?.status !== 'cancelled') {
+        // Recupera gli items dell'ordine se non sono già caricati
+        let itemsToRestore = oldOrder!.items
+        if (!itemsToRestore) {
+          const { data: itemsData } = await supabase
+            .from('order_items')
+            .select('*')
+            .eq('order_id', id)
+          itemsToRestore = itemsData || []
+        }
+
+        // Ripristina lo stock per ogni prodotto
+        if (itemsToRestore) {
+          for (const item of itemsToRestore) {
+            // Chiama una funzione RPC per incrementare lo stock in modo atomico
+            const { error: stockError } = await supabase.rpc('increment_product_stock', {
+              p_product_id: item.product_id,
+              p_quantity: item.quantity,
+            })
+
+            if (stockError) {
+              console.error('Errore ripristino stock:', stockError)
+              // Continuiamo comunque per provare a ripristinare gli altri
+            }
+          }
+        }
+      }
 
       const updateData: any = { status }
 

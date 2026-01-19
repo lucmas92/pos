@@ -8,7 +8,7 @@ import { useConfigStore } from '@/stores/config'
 import CartItem from '@/components/guest/CartItem.vue'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import { formatCurrency } from '@/utils/currency'
-import { saveToStorage, getFromStorage, STORAGE_KEYS } from '@/utils/storage'
+import { saveToStorage, getFromStorage } from '@/utils/storage'
 
 const router = useRouter()
 const cart = useCart()
@@ -161,7 +161,7 @@ onMounted(() => {
         <div v-if="error" class="bg-red-50 border border-red-200 rounded-lg p-4">
           <div class="flex">
             <svg
-              class="w-5 h-5 text-red-600 mr-2 flex-shrink-0"
+              class="w-5 h-5 text-red-600 mr-2 shrink-0"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -307,7 +307,7 @@ onMounted(() => {
         <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
           <div class="flex">
             <svg
-              class="w-5 h-5 text-blue-600 mr-3 flex-shrink-0 mt-0.5"
+              class="w-5 h-5 text-blue-600 mr-3 shrink-0 mt-0.5"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
