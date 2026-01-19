@@ -159,8 +159,7 @@ onMounted(() => {
               <span class="text-white font-bold text-xl">{{ eventName.charAt(0) }}</span>
             </div>
             <div>
-              <h1 class="text-lg font-bold text-gray-900 leading-none">{{ eventName }}</h1>
-              <p class="text-xs text-gray-500 font-medium mt-1">Sagra Paesana</p>
+              <h1 class="text-lg font-bold text-gray-900 leading-none" v-html="eventName"></h1>
             </div>
           </div>
         </div>
