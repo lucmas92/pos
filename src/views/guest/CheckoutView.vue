@@ -4,16 +4,17 @@ import { useRouter } from 'vue-router'
 import { useCart } from '@/composables/useCart'
 import { useOrders } from '@/composables/useOrders'
 import { useToast } from '@/composables/useToast'
+import { useConfigStore } from '@/stores/config'
 import CartItem from '@/components/guest/CartItem.vue'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import { formatCurrency } from '@/utils/currency'
-import { saveToStorage, getFromStorage } from '@/utils/storage'
-import AppButton from '@/components/common/AppButton.vue'
+import { saveToStorage, getFromStorage, STORAGE_KEYS } from '@/utils/storage'
 
 const router = useRouter()
 const cart = useCart()
 const orders = useOrders({ autoFetch: false })
 const toast = useToast()
+const configStore = useConfigStore()
 
 // State
 const guestName = ref('')
@@ -33,6 +34,8 @@ const itemsTotal = computed(() => cart.totalAmount.value)
 // Per ora non abbiamo costi aggiuntivi, ma lasciamo la struttura
 const serviceFee = computed(() => 0)
 const total = computed(() => itemsTotal.value + serviceFee.value)
+
+const enableOrderNotes = computed(() => configStore.config?.enable_order_notes ?? true)
 
 // Methods
 function goBack() {
@@ -59,7 +62,7 @@ async function handleSubmit() {
       guest_name: guestName.value.trim() || undefined,
       covers: cart.covers.value,
       total_amount: total.value,
-      notes: orderNotes.value.trim() || undefined,
+      notes: enableOrderNotes.value ? orderNotes.value.trim() || undefined : undefined,
       items: cart.items.value.map((item) => ({
         product_id: item.product.id,
         variant_id: item.variant?.id,
@@ -158,7 +161,7 @@ onMounted(() => {
         <div v-if="error" class="bg-red-50 border border-red-200 rounded-lg p-4">
           <div class="flex">
             <svg
-              class="w-5 h-5 text-red-600 mr-2 shrink-0"
+              class="w-5 h-5 text-red-600 mr-2 flex-shrink-0"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -242,7 +245,7 @@ onMounted(() => {
             </div>
 
             <!-- Order Notes -->
-            <div class="form-group">
+            <div v-if="enableOrderNotes" class="form-group">
               <label class="form-label"> Note per l'ordine (opzionale) </label>
               <textarea
                 v-model="orderNotes"
@@ -304,7 +307,7 @@ onMounted(() => {
         <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
           <div class="flex">
             <svg
-              class="w-5 h-5 text-blue-600 mr-3 shrink-0 mt-0.5"
+              class="w-5 h-5 text-blue-600 mr-3 flex-shrink-0 mt-0.5"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -334,17 +337,12 @@ onMounted(() => {
     <div
       class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 safe-area-inset-bottom"
     >
-      <AppButton
-        @click="handleSubmit"
-        class="mb-6"
-        :disabled="!canSubmit"
-        variant="primary"
-        size="lg"
-        block
-      >
-        <LoadingSpinner v-if="isSubmitting" size="sm" color="text-white" class="mr-2" />
-        <span v-else> Conferma Ordine - {{ formatCurrency(total) }} </span>
-      </AppButton>
+      <div class="container-custom max-w-2xl mx-auto">
+        <button @click="handleSubmit" :disabled="!canSubmit" class="btn btn-primary btn-lg w-full">
+          <LoadingSpinner v-if="isSubmitting" size="sm" color="text-white" class="mr-2" />
+          <span v-else> Conferma Ordine - {{ formatCurrency(total) }} </span>
+        </button>
+      </div>
     </div>
   </div>
 </template>

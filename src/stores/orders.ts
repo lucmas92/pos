@@ -255,47 +255,31 @@ export const useOrdersStore = defineStore('orders', () => {
   }) {
     try {
       loading.value = true
-      error.value = null
 
-      // Crea l'ordine
-      const { data: order, error: orderError } = await supabase
-        .from('orders')
-        .insert([
-          {
-            guest_name: orderData.guest_name,
-            covers: orderData.covers,
-            total_amount: orderData.total_amount,
-            notes: orderData.notes,
-            status: 'pending',
-          },
-        ])
-        .select()
-        .single()
-
-      if (orderError) throw orderError
-
-      // Crea gli items dell'ordine
-      const orderItems = orderData.items.map((item) => ({
-        ...item,
-        order_id: (order as Order).id,
+      // Prepariamo il payload JSON come richiesto dalla funzione SQL
+      const orderItemsPayload = orderData.items.map((item) => ({
+        product_id: item.product_id,
+        quantity: item.quantity,
+        unit_price: item.unit_price, // Prendiamo il prezzo al momento dell'ordine
+        notes: item.notes || '',
       }))
 
-      const { data: items, error: itemsError } = await supabase
-        .from('order_items')
-        .insert(orderItems).select(`
-          *,
-          product:products(*),
-          variant:product_variants(*)
-        `)
+      // Chiamata RPC a Supabase
+      const { data, error } = await supabase.rpc('create_order_transaction', {
+        p_guest_name: orderData.guest_name || null,
+        p_covers: orderData.covers,
+        p_total_amount: orderData.total_amount,
+        p_items: orderItemsPayload,
+      })
 
-      if (itemsError) throw itemsError
+      if (error) {
+        // Qui gestiamo l'errore specifico dello stock
+        console.error('Errore creazione ordine:', error.message)
+        throw error // Rilanciamo l'errore per gestirlo nella View
+      }
 
-      const fullOrder = { ...order, items }
-      currentOrder.value = fullOrder
-      orders.value.unshift(fullOrder)
-
-      // Audit (opzionale, se vogliamo tracciare anche gli ordini creati dagli ospiti, ma user_id sarà null)
-      // await logAction('CREATE_ORDER', 'order', order.id, { total: order.total_amount })
+      const order = await fetchOrderById(data.order_id)
+      const fullOrder = { ...order.data, items: orderItemsPayload }
 
       return { success: true, data: fullOrder }
     } catch (err: any) {

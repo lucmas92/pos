@@ -15,9 +15,12 @@ const form = ref({
   is_ordering_open: true,
   enable_takeaway: true,
   enable_covers: true,
+  enable_order_notes: true,
+  enable_item_notes: true,
   cover_price: 0,
   printer_kitchen_ip: '',
   printer_bar_ip: '',
+  cart_expiration_minutes: 30,
 })
 
 const saving = ref(false)
@@ -36,9 +39,12 @@ watch(
         is_ordering_open: newConfig.is_ordering_open ?? true,
         enable_takeaway: newConfig.enable_takeaway ?? true,
         enable_covers: newConfig.enable_covers ?? true,
+        enable_order_notes: newConfig.enable_order_notes ?? true,
+        enable_item_notes: newConfig.enable_item_notes ?? true,
         cover_price: newConfig.cover_price || 0,
         printer_kitchen_ip: newConfig.printer_kitchen_ip || '',
         printer_bar_ip: newConfig.printer_bar_ip || '',
+        cart_expiration_minutes: newConfig.cart_expiration_minutes || 30,
       }
     }
   },
@@ -103,6 +109,24 @@ async function handleSave() {
               label="Piè di pagina"
               placeholder="Es. Grazie e arrivederci!"
             />
+          </div>
+        </div>
+
+        <!-- System Settings -->
+        <div class="card">
+          <h2 class="text-lg font-bold text-gray-900 mb-4">Sistema</h2>
+          <div class="space-y-4">
+            <AppInput
+              v-model.number="form.cart_expiration_minutes"
+              type="number"
+              label="Scadenza Carrello (minuti)"
+              placeholder="30"
+              :min="1"
+            />
+            <p class="text-xs text-gray-500">
+              Dopo questo tempo di inattività, il carrello dell'ospite verrà svuotato
+              automaticamente.
+            </p>
           </div>
         </div>
 
@@ -185,6 +209,38 @@ async function handleSave() {
                 :step="0.1"
                 :min="0"
               />
+            </div>
+
+            <hr class="border-gray-100" />
+
+            <!-- Order Notes -->
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="font-medium text-gray-900">Note Ordine</p>
+                <p class="text-xs text-gray-500">Permetti note generali sull'ordine</p>
+              </div>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" v-model="form.enable_order_notes" class="sr-only peer" />
+                <div
+                  class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"
+                ></div>
+              </label>
+            </div>
+
+            <hr class="border-gray-100" />
+
+            <!-- Item Notes -->
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="font-medium text-gray-900">Note Prodotti</p>
+                <p class="text-xs text-gray-500">Permetti note su singoli prodotti</p>
+              </div>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" v-model="form.enable_item_notes" class="sr-only peer" />
+                <div
+                  class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"
+                ></div>
+              </label>
             </div>
           </div>
         </div>

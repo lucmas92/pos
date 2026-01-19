@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import type { CartItem } from '@/types/models'
 import { formatCurrency } from '@/utils/currency'
+import { useConfigStore } from '@/stores/config'
 
 interface Props {
   item: CartItem
@@ -17,12 +18,15 @@ interface Emits {
 
 const props = defineProps<Props>()
 const emit = defineEmits<Emits>()
+const configStore = useConfigStore()
 
 const showNotes = ref(false)
 const localNotes = ref(props.item.notes || '')
 
 const itemPrice = props.item.product.price + (props.item.variant?.price_modifier || 0)
 const totalPrice = itemPrice * props.item.quantity
+
+const enableItemNotes = computed(() => configStore.config?.enable_item_notes ?? true)
 
 function handleIncrement() {
   emit('increment', props.index)
@@ -137,6 +141,7 @@ function handleSaveNotes() {
           <!-- Actions -->
           <div class="flex items-center space-x-1">
             <button
+              v-if="enableItemNotes"
               @click="showNotes = !showNotes"
               class="p-2 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
               :class="{ 'text-primary-600 bg-primary-50': item.notes }"
@@ -172,7 +177,10 @@ function handleSaveNotes() {
     </div>
 
     <!-- Notes Input -->
-    <div v-if="showNotes" class="mt-4 pt-4 border-t border-gray-100 animate-fade-in">
+    <div
+      v-if="showNotes && enableItemNotes"
+      class="mt-4 pt-4 border-t border-gray-100 animate-fade-in"
+    >
       <textarea
         v-model="localNotes"
         placeholder="Aggiungi note per la cucina (es: senza cipolla)..."

@@ -5,6 +5,7 @@ import { formatCurrency } from '@/utils/currency'
 import AppModal from '@/components/common/AppModal.vue'
 import AppButton from '@/components/common/AppButton.vue'
 import { ALLERGENS } from '@/constants/allergens'
+import { useConfigStore } from '@/stores/config'
 
 interface Props {
   product: Product
@@ -24,6 +25,7 @@ interface Emits {
 
 const props = defineProps<Props>()
 const emit = defineEmits<Emits>()
+const configStore = useConfigStore()
 
 const showVariants = ref(false)
 const selectedVariant = ref<ProductVariant | undefined>()
@@ -51,6 +53,8 @@ const productAllergens = computed(() => {
   if (!props.product.allergens) return []
   return ALLERGENS.filter((a) => props.product.allergens?.includes(a.id))
 })
+
+const enableItemNotes = computed(() => configStore.config?.enable_item_notes ?? true)
 
 function handleAddToCart() {
   if (isOutOfStock.value) return
@@ -357,7 +361,7 @@ function decrementQuantity() {
         </div>
 
         <!-- Notes -->
-        <div>
+        <div v-if="enableItemNotes">
           <label class="block text-sm font-bold text-gray-700 mb-2"
             >Note per la cucina (opzionale)</label
           >

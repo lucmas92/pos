@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useCart } from '@/composables/useCart'
 import CartItem from '@/components/guest/CartItem.vue'
+import CartTimer from '@/components/guest/CartTimer.vue'
 import { formatCurrency } from '@/utils/currency'
 import AppButton from '@/components/common/AppButton.vue'
 import { useConfig } from '@/composables/useConfig.ts'
@@ -17,15 +18,13 @@ interface Emits {
 
 defineProps<Props>()
 const emit = defineEmits<Emits>()
-const { config } = useConfig()
 
 const router = useRouter()
 const cart = useCart()
-
-const isOrderingOpen = computed(() => config.value?.is_ordering_open ?? true)
+const { config } = useConfig()
 
 const canCheckout = computed(() => {
-  return isOrderingOpen.value && !cart.isEmpty.value && cart.covers.value >= 1
+  return !cart.isEmpty.value && cart.covers.value >= 1
 })
 
 function handleClose() {
@@ -67,18 +66,14 @@ function handleClear() {
       v-if="show"
       class="fixed top-0 right-0 h-full w-full md:w-[450px] bg-white shadow-2xl z-50 flex flex-col"
     >
-      <!-- Service Closed Banner -->
-      <div
-        v-if="!isOrderingOpen"
-        class="md:hidden bg-red-600 text-white text-center py-2 px-4 font-bold text-sm sticky top-0 z-50"
-      >
-        ⚠️ Le ordinazioni sono momentaneamente chiuse
-      </div>
       <!-- Header -->
       <div class="flex items-center justify-between p-6 border-b border-gray-100 bg-white z-10">
         <div>
           <h2 class="text-2xl font-bold text-gray-900">Il tuo ordine</h2>
-          <p class="text-sm text-gray-500 mt-1">{{ cart.totalItems.value }} prodotti selezionati</p>
+          <div class="flex items-center gap-3 mt-1">
+            <p class="text-sm text-gray-500">{{ cart.totalItems.value }} prodotti selezionati</p>
+            <CartTimer v-if="!cart.isEmpty.value" />
+          </div>
         </div>
         <button
           @click="handleClose"
@@ -124,6 +119,29 @@ function handleClear() {
 
       <!-- Cart Items -->
       <div v-else class="flex-1 overflow-y-auto bg-gray-50">
+        <!-- Warning Banner -->
+        <div
+          class="bg-yellow-50 border-b border-yellow-100 p-3 text-xs text-yellow-800 flex items-start gap-2"
+        >
+          <svg
+            class="w-4 h-4 flex-shrink-0 mt-0.5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
+          </svg>
+          <p>
+            <strong>Attenzione:</strong> L'aggiunta al carrello non riserva i prodotti. L'ordine è
+            confermato solo al pagamento.
+          </p>
+        </div>
+
         <!-- Coperti -->
         <div
           v-if="config!.enable_covers"
@@ -227,7 +245,7 @@ function handleClear() {
         </div>
 
         <!-- Total -->
-        <div class="flex justify-between items-center mb-4 pt-4 border-t border-gray-100">
+        <div class="flex justify-between items-center mb-6 pt-4 border-t border-gray-100">
           <span class="text-xl font-bold text-gray-900">Totale</span>
           <span class="text-2xl font-bold text-primary-600">{{
             formatCurrency(cart.totalAmount.value)
@@ -242,7 +260,7 @@ function handleClear() {
           size="lg"
           block
         >
-          Riepilogo ordine
+          Procedi al pagamento
           <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
               stroke-linecap="round"

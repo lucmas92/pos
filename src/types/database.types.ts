@@ -4,8 +4,7 @@
  * Per ora li definiamo manualmente
  */
 
-// export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
-export type Json = any
+export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
 
 export interface Database {
   public: {
@@ -229,9 +228,12 @@ export interface Database {
           is_ordering_open: boolean
           enable_takeaway: boolean
           enable_covers: boolean
+          enable_order_notes: boolean
+          enable_item_notes: boolean
           cover_price: number
           printer_kitchen_ip: string
           printer_bar_ip: string
+          cart_expiration_minutes: number
           updated_at: string
         }
         Insert: {
@@ -243,9 +245,12 @@ export interface Database {
           is_ordering_open?: boolean
           enable_takeaway?: boolean
           enable_covers?: boolean
+          enable_order_notes?: boolean
+          enable_item_notes?: boolean
           cover_price?: number
           printer_kitchen_ip?: string
           printer_bar_ip?: string
+          cart_expiration_minutes?: number
           updated_at?: string
         }
         Update: {
@@ -257,9 +262,12 @@ export interface Database {
           is_ordering_open?: boolean
           enable_takeaway?: boolean
           enable_covers?: boolean
+          enable_order_notes?: boolean
+          enable_item_notes?: boolean
           cover_price?: number
           printer_kitchen_ip?: string
           printer_bar_ip?: string
+          cart_expiration_minutes?: number
           updated_at?: string
         }
       }

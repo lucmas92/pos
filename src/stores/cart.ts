@@ -3,12 +3,16 @@ import { ref, computed } from 'vue'
 import type { CartItem, Product, ProductVariant } from '@/types/models'
 import { saveToStorage, getFromStorage, STORAGE_KEYS } from '@/utils/storage'
 import { calculateTotal } from '@/utils/currency'
+import { useConfigStore } from '@/stores/config'
 
 export const useCartStore = defineStore('cart', () => {
   const items = ref<CartItem[]>([])
   const covers = ref(1)
   const orderNotes = ref('')
   const guestName = ref('')
+  const lastUpdated = ref<number>(Date.now())
+
+  const configStore = useConfigStore()
 
   // Computed
   const totalItems = computed(() => items.value.reduce((sum, item) => sum + item.quantity, 0))
@@ -26,8 +30,10 @@ export const useCartStore = defineStore('cart', () => {
 
   const itemsCount = computed(() => items.value.length)
 
+  const expirationMinutes = computed(() => configStore.config?.cart_expiration_minutes || 30)
+
   /**
-   * Carica il carrello dal localStorage
+   * Carica il carrello dal localStorage e controlla la scadenza
    */
   function loadFromStorage() {
     const savedCart = getFromStorage<{
@@ -35,13 +41,26 @@ export const useCartStore = defineStore('cart', () => {
       covers: number
       orderNotes: string
       guestName: string
+      lastUpdated?: number
     }>(STORAGE_KEYS.CART)
 
     if (savedCart) {
+      // Check expiration
+      const now = Date.now()
+      const lastUpdate = savedCart.lastUpdated || 0
+      const diffMinutes = (now - lastUpdate) / (1000 * 60)
+
+      if (diffMinutes > expirationMinutes.value) {
+        console.log('Cart expired, clearing...')
+        clearCart()
+        return
+      }
+
       items.value = savedCart.items || []
       covers.value = savedCart.covers || 1
       orderNotes.value = savedCart.orderNotes || ''
       guestName.value = savedCart.guestName || ''
+      lastUpdated.value = lastUpdate
     }
   }
 
@@ -49,11 +68,13 @@ export const useCartStore = defineStore('cart', () => {
    * Salva il carrello nel localStorage
    */
   function saveCart() {
+    lastUpdated.value = Date.now()
     saveToStorage(STORAGE_KEYS.CART, {
       items: items.value,
       covers: covers.value,
       orderNotes: orderNotes.value,
       guestName: guestName.value,
+      lastUpdated: lastUpdated.value,
     })
   }
 
@@ -228,6 +249,7 @@ export const useCartStore = defineStore('cart', () => {
     covers.value = 1
     orderNotes.value = ''
     guestName.value = ''
+    lastUpdated.value = Date.now()
     saveCart()
   }
 
@@ -265,12 +287,14 @@ export const useCartStore = defineStore('cart', () => {
     covers,
     orderNotes,
     guestName,
+    lastUpdated,
 
     // Getters
     totalItems,
     totalAmount,
     isEmpty,
     itemsCount,
+    expirationMinutes,
 
     // Actions
     loadFromStorage,
