@@ -260,7 +260,7 @@ function handleClear() {
           size="lg"
           block
         >
-          Procedi al pagamento
+          Conferma Ordine
           <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
               stroke-linecap="round"

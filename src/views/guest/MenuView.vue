@@ -146,7 +146,14 @@ onMounted(() => {
         <div class="flex items-center justify-between h-20">
           <!-- Logo/Title -->
           <div class="flex items-center space-x-3">
+            <img
+              v-if="config && config!.logo_url"
+              :src="config!.logo_url"
+              class="w-40 h-40"
+              alt="logo_url"
+            />
             <div
+              v-else
               class="w-10 h-10 bg-primary-600 rounded-xl flex items-center justify-center shadow-lg shadow-primary-500/30"
             >
               <span class="text-white font-bold text-xl">{{ eventName.charAt(0) }}</span>
@@ -156,79 +163,80 @@ onMounted(() => {
               <p class="text-xs text-gray-500 font-medium mt-1">Sagra Paesana</p>
             </div>
           </div>
-
-          <div class="flex items-center space-x-3">
-            <!-- My Orders Button -->
-            <button
-              @click="goToMyOrders"
-              class="hidden md:flex items-center px-4 py-2 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-xl font-medium transition-colors"
-            >
-              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                />
-              </svg>
-              I Miei Ordini
-            </button>
-
-            <!-- Manager Button (Visible only if authenticated) -->
-            <button
-              v-if="auth.isAuthenticated.value"
-              @click="goToManager"
-              class="hidden md:flex items-center px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-medium transition-colors"
-            >
-              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
-                />
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                />
-              </svg>
-              Area Manager
-            </button>
-
-            <!-- Cart Button -->
-            <CartButton
-              :items-count="cart.totalItems.value"
-              :total="cart.totalAmount.value"
-              @click="handleOpenCart"
-            />
-          </div>
         </div>
 
         <!-- Search & Filters -->
         <div class="pb-4 space-y-3">
-          <!-- Search Bar -->
-          <div class="relative">
-            <input
-              v-model="searchQuery"
-              type="text"
-              placeholder="Cerca prodotti..."
-              class="input pl-11 py-3.5 bg-gray-50 border-transparent focus:bg-white transition-all shadow-sm"
-            />
-            <svg
-              class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+          <div class="flex items-center justify-between gap-2">
+            <!-- Search Bar -->
+            <div class="relative flex-1">
+              <input
+                v-model="searchQuery"
+                type="text"
+                placeholder="Cerca prodotti..."
+                class="input pl-11 py-4 bg-gray-50 border-transparent focus:bg-white transition-all shadow-sm"
               />
-            </svg>
+              <svg
+                class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                />
+              </svg>
+            </div>
+            <div class="flex items-center space-x-3">
+              <!-- My Orders Button -->
+              <button
+                @click="goToMyOrders"
+                class="hidden md:flex items-center px-4 py-2 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-xl font-medium transition-colors"
+              >
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                  />
+                </svg>
+                I Miei Ordini
+              </button>
+
+              <!-- Manager Button (Visible only if authenticated) -->
+              <button
+                v-if="auth.isAuthenticated.value"
+                @click="goToManager"
+                class="hidden md:flex items-center px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-medium transition-colors"
+              >
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+                  />
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                  />
+                </svg>
+                Area Manager
+              </button>
+
+              <!-- Cart Button -->
+              <CartButton
+                :items-count="cart.totalItems.value"
+                :total="cart.totalAmount.value"
+                @click="handleOpenCart"
+              />
+            </div>
           </div>
 
           <!-- Allergen Filter -->

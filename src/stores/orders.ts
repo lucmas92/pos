@@ -291,7 +291,7 @@ export const useOrdersStore = defineStore('orders', () => {
       })
 
       console.log('Ordine creato con successo:', fullOrder)
-      debugger;
+      debugger
 
       return { success: true, data: fullOrder }
     } catch (err: any) {
