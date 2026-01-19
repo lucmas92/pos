@@ -2,7 +2,7 @@
  * Modelli dell'applicazione con relazioni
  */
 
-import type { Database } from './database.types'
+import type { Database, Json } from './database.types'
 
 // Tipi base dalle tabelle
 export type Profile = Database['public']['Tables']['profiles']['Row']
@@ -25,7 +25,7 @@ export interface AuditLog {
   action: string
   entity_type: string
   entity_id: string | null
-  details: any
+  details: Json
 }
 
 /**
@@ -35,7 +35,10 @@ export interface Product extends ProductBase {
   category?: Category
   variants?: ProductVariant[]
   kit_items?: KitItem[]
-  allergens?: string[] | null
+  // allergens è già in ProductBase, ma lo ridefiniamo per chiarezza se necessario,
+  // o lo rimuoviamo se ProductBase è sufficiente.
+  // In questo caso, ProductBase ha già allergens: string[] | null
+  // Quindi non serve ridefinirlo se non cambia il tipo.
 }
 
 /**
@@ -73,16 +76,12 @@ export interface CartItem {
 /**
  * Dati per creare un prodotto
  */
-export type CreateProductData = Database['public']['Tables']['products']['Insert'] & {
-  allergens?: string[] | null
-}
+export type CreateProductData = Database['public']['Tables']['products']['Insert']
 
 /**
  * Dati per aggiornare un prodotto
  */
-export type UpdateProductData = Database['public']['Tables']['products']['Update'] & {
-  allergens?: string[] | null
-}
+export type UpdateProductData = Database['public']['Tables']['products']['Update']
 
 /**
  * Dati per creare una categoria

@@ -127,7 +127,7 @@ function getChangedFields(details: any) {
               <td class="px-6 py-4 text-sm text-gray-600 align-top">
                 <!-- Case: Update Product (Show changes) -->
                 <div
-                  v-if="log.action === 'UPDATE_PRODUCT' && log.details?.changes"
+                  v-if="log.action === 'UPDATE_PRODUCT' && log.details.changes"
                   class="space-y-1"
                 >
                   <div

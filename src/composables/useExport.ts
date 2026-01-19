@@ -11,20 +11,24 @@ export function useExport() {
   function convertToCSV(data: any[], headers: string[]) {
     const headerRow = headers.join(',') + '\n'
 
-    const rows = data.map(row => {
-      return headers.map(header => {
-        const value = row[header]
-        // Gestione stringhe con virgole o a capo
-        if (typeof value === 'string' && (value.includes(',') || value.includes('\n'))) {
-          return `"${value.replace(/"/g, '""')}"`
-        }
-        // Formatta numeri con 2 decimali se necessario
-        if (typeof value === 'number' && !Number.isInteger(value)) {
-          return value.toFixed(2)
-        }
-        return value
-      }).join(',')
-    }).join('\n')
+    const rows = data
+      .map((row) => {
+        return headers
+          .map((header) => {
+            const value = row[header]
+            // Gestione stringhe con virgole o a capo
+            if (typeof value === 'string' && (value.includes(',') || value.includes('\n'))) {
+              return `"${value.replace(/"/g, '""')}"`
+            }
+            // Formatta numeri con 2 decimali se necessario
+            if (typeof value === 'number' && !Number.isInteger(value)) {
+              return value.toFixed(2)
+            }
+            return value
+          })
+          .join(',')
+      })
+      .join('\n')
 
     return headerRow + rows
   }
@@ -59,31 +63,43 @@ export function useExport() {
         return
       }
 
-      const flatData = orders.map(order => {
-        const itemsSummary = order.items?.map(i =>
-          `${i.quantity}x ${i.product?.name} ${i.variant ? `(${i.variant.name})` : ''}`
-        ).join('; ') || ''
+      const flatData = orders.map((order) => {
+        const itemsSummary =
+          order.items
+            ?.map(
+              (i) => `${i.quantity}x ${i.product?.name} ${i.variant ? `(${i.variant.name})` : ''}`,
+            )
+            .join('; ') || ''
 
         return {
           'Numero Ordine': order.order_number,
-          'Data': formatDate(order.created_at, true),
-          'Ospite': order.guest_name || 'Anonimo',
-          'Coperti': order.covers,
-          'Totale': order.total_amount,
-          'Stato': order.status,
-          'Note': order.notes || '',
-          'Articoli': itemsSummary
+          Data: formatDate(order.created_at, true),
+          Ospite: order.guest_name || 'Anonimo',
+          Coperti: order.covers,
+          Totale: order.total_amount,
+          Stato: order.status,
+          Note: order.notes || '',
+          Articoli: itemsSummary,
         }
       })
 
-      const headers = ['Numero Ordine', 'Data', 'Ospite', 'Coperti', 'Totale', 'Stato', 'Note', 'Articoli']
+      const headers = [
+        'Numero Ordine',
+        'Data',
+        'Ospite',
+        'Coperti',
+        'Totale',
+        'Stato',
+        'Note',
+        'Articoli',
+      ]
       const csv = convertToCSV(flatData, headers)
       const filename = `report_ordini_${new Date().toISOString().split('T')[0]}.csv`
 
       downloadCSV(csv, filename)
     } catch (e) {
       console.error('Export error:', e)
-      alert('Errore durante l\'esportazione')
+      alert("Errore durante l'esportazione")
     } finally {
       exporting.value = false
     }
@@ -95,7 +111,7 @@ export function useExport() {
   async function exportFinancialReport() {
     try {
       exporting.value = true
-      const orders = ordersStore.orders.filter(o => o.status !== 'cancelled')
+      const orders = ordersStore.orders.filter((o) => o.status !== 'cancelled')
 
       if (orders.length === 0) {
         alert('Nessun dato finanziario disponibile')
@@ -103,14 +119,17 @@ export function useExport() {
       }
 
       // Raggruppa per data
-      const dailyStats = new Map<string, {
-        date: string,
-        orders_count: number,
-        covers: number,
-        revenue: number
-      }>()
+      const dailyStats = new Map<
+        string,
+        {
+          date: string
+          orders_count: number
+          covers: number
+          revenue: number
+        }
+      >()
 
-      orders.forEach(order => {
+      orders.forEach((order) => {
         const date = new Date(order.created_at).toLocaleDateString('it-IT')
         const existing = dailyStats.get(date)
 
@@ -123,28 +142,35 @@ export function useExport() {
             date,
             orders_count: 1,
             covers: order.covers,
-            revenue: order.total_amount
+            revenue: order.total_amount,
           })
         }
       })
 
-      const flatData = Array.from(dailyStats.values()).map(stat => ({
-        'Data': stat.date,
+      const flatData = Array.from(dailyStats.values()).map((stat) => ({
+        Data: stat.date,
         'Numero Ordini': stat.orders_count,
         'Totale Coperti': stat.covers,
         'Incasso Totale': stat.revenue,
         'Scontrino Medio': stat.revenue / stat.orders_count,
-        'Media per Coperto': stat.revenue / stat.covers
+        'Media per Coperto': stat.revenue / stat.covers,
       }))
 
-      const headers = ['Data', 'Numero Ordini', 'Totale Coperti', 'Incasso Totale', 'Scontrino Medio', 'Media per Coperto']
+      const headers = [
+        'Data',
+        'Numero Ordini',
+        'Totale Coperti',
+        'Incasso Totale',
+        'Scontrino Medio',
+        'Media per Coperto',
+      ]
       const csv = convertToCSV(flatData, headers)
       const filename = `report_finanziario_${new Date().toISOString().split('T')[0]}.csv`
 
       downloadCSV(csv, filename)
     } catch (e) {
       console.error('Export error:', e)
-      alert('Errore durante l\'esportazione')
+      alert("Errore durante l'esportazione")
     } finally {
       exporting.value = false
     }
@@ -156,22 +182,25 @@ export function useExport() {
   async function exportProductSales() {
     try {
       exporting.value = true
-      const orders = ordersStore.orders.filter(o => o.status !== 'cancelled')
+      const orders = ordersStore.orders.filter((o) => o.status !== 'cancelled')
 
       if (orders.length === 0) {
         alert('Nessun dato di vendita disponibile')
         return
       }
 
-      const productStats = new Map<string, {
-        name: string,
-        category: string,
-        quantity: number,
-        revenue: number
-      }>()
+      const productStats = new Map<
+        string,
+        {
+          name: string
+          category: string
+          quantity: number
+          revenue: number
+        }
+      >()
 
-      orders.forEach(order => {
-        order.items?.forEach(item => {
+      orders.forEach((order) => {
+        order.items?.forEach((item) => {
           const key = item.product_id
           const existing = productStats.get(key)
           const revenue = item.unit_price * item.quantity
@@ -184,7 +213,7 @@ export function useExport() {
               name: item.product?.name || 'Sconosciuto',
               category: item.product?.category?.name || 'N/A',
               quantity: item.quantity,
-              revenue: revenue
+              revenue: revenue,
             })
           }
         })
@@ -192,22 +221,28 @@ export function useExport() {
 
       const flatData = Array.from(productStats.values())
         .sort((a, b) => b.revenue - a.revenue)
-        .map(stat => ({
-          'Prodotto': stat.name,
-          'Categoria': stat.category,
+        .map((stat) => ({
+          Prodotto: stat.name,
+          Categoria: stat.category,
           'Quantità Venduta': stat.quantity,
           'Incasso Generato': stat.revenue,
-          'Prezzo Medio': stat.revenue / stat.quantity
+          'Prezzo Medio': stat.revenue / stat.quantity,
         }))
 
-      const headers = ['Prodotto', 'Categoria', 'Quantità Venduta', 'Incasso Generato', 'Prezzo Medio']
+      const headers = [
+        'Prodotto',
+        'Categoria',
+        'Quantità Venduta',
+        'Incasso Generato',
+        'Prezzo Medio',
+      ]
       const csv = convertToCSV(flatData, headers)
       const filename = `report_prodotti_${new Date().toISOString().split('T')[0]}.csv`
 
       downloadCSV(csv, filename)
     } catch (e) {
       console.error('Export error:', e)
-      alert('Errore durante l\'esportazione')
+      alert("Errore durante l'esportazione")
     } finally {
       exporting.value = false
     }
@@ -217,6 +252,6 @@ export function useExport() {
     exporting,
     exportOrdersReport,
     exportFinancialReport,
-    exportProductSales
+    exportProductSales,
   }
 }

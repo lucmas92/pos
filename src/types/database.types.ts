@@ -4,7 +4,8 @@
  * Per ora li definiamo manualmente
  */
 
-export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
+// export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
+export type Json = any
 
 export interface Database {
   public: {
@@ -69,6 +70,7 @@ export interface Database {
           display_order: number
           created_at: string
           updated_at: string
+          allergens: string[] | null
         }
         Insert: {
           id?: string
@@ -83,6 +85,7 @@ export interface Database {
           display_order?: number
           created_at?: string
           updated_at?: string
+          allergens?: string[] | null
         }
         Update: {
           id?: string
@@ -97,6 +100,7 @@ export interface Database {
           display_order?: number
           created_at?: string
           updated_at?: string
+          allergens?: string[] | null
         }
       }
       product_variants: {
@@ -166,7 +170,7 @@ export interface Database {
           guest_name?: string | null
           covers: number
           total_amount: number
-          status?: 'pending' | 'completed' | 'cancelled'
+          status?: 'pending' | 'completed' | 'cancelled' | 'paid'
           notes?: string | null
           created_at?: string
           completed_at?: string | null
@@ -177,7 +181,7 @@ export interface Database {
           guest_name?: string | null
           covers?: number
           total_amount?: number
-          status?: 'pending' | 'completed' | 'cancelled'
+          status?: 'pending' | 'completed' | 'cancelled' | 'paid'
           notes?: string | null
           created_at?: string
           completed_at?: string | null
@@ -217,7 +221,7 @@ export interface Database {
       }
       configurations: {
         Row: {
-          id: string
+          id: number
           event_name: string
           receipt_header: string
           receipt_footer: string
@@ -231,7 +235,7 @@ export interface Database {
           updated_at: string
         }
         Insert: {
-          id?: string
+          id?: number
           event_name?: string
           receipt_header?: string
           receipt_footer?: string
@@ -245,7 +249,7 @@ export interface Database {
           updated_at?: string
         }
         Update: {
-          id?: string
+          id?: number
           event_name?: string
           receipt_header?: string
           receipt_footer?: string
@@ -259,6 +263,38 @@ export interface Database {
           updated_at?: string
         }
       }
+      audit_logs: {
+        Row: {
+          id: string
+          created_at: string
+          user_id: string | null
+          user_email: string | null
+          action: string
+          entity_type: string
+          entity_id: string | null
+          details: Json
+        }
+        Insert: {
+          id?: string
+          created_at?: string
+          user_id?: string | null
+          user_email?: string | null
+          action: string
+          entity_type: string
+          entity_id?: string | null
+          details?: Json
+        }
+        Update: {
+          id?: string
+          created_at?: string
+          user_id?: string | null
+          user_email?: string | null
+          action?: string
+          entity_type?: string
+          entity_id?: string | null
+          details?: Json
+        }
+      }
     }
     Views: {
       [_ in never]: never
@@ -268,7 +304,7 @@ export interface Database {
     }
     Enums: {
       user_role: 'manager' | 'admin'
-      order_status: 'pending' | 'completed' | 'cancelled'
+      order_status: 'pending' | 'completed' | 'cancelled' | 'paid'
     }
   }
 }

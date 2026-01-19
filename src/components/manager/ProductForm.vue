@@ -9,7 +9,6 @@ import type { Database } from '@/types/database.types'
 import type { Product, ProductVariant } from '@/types/models'
 import { formatCurrency } from '@/utils/currency'
 import { ALLERGENS } from '@/constants/allergens'
-import type { VariantForm } from '@/types'
 
 type ProductInsert = Database['public']['Tables']['products']['Insert'] & {
   allergens?: string[] | null
@@ -125,10 +124,20 @@ async function handleSubmit() {
 
   loading.value = true
   try {
+    // Clean up form data to match Omit<Product, ...>
+    // Ensure optional fields are at least null if undefined, though Supabase handles undefined as default usually.
+    // The error was about 'undefined' not being assignable to 'string | null'.
+    const productData = {
+      ...form.value,
+      description: form.value.description || null,
+      image_url: form.value.image_url || null,
+      // Ensure other optional fields are handled if necessary, but description/image_url are the common culprits
+    }
+
     if (isEditMode.value && props.product) {
-      await products.update(props.product.id, form.value)
+      await products.update(props.product.id, productData)
     } else {
-      await products.create(form.value)
+      await products.create(productData as Product)
     }
     emit('saved')
   } catch (e) {
@@ -145,7 +154,7 @@ async function addVariant() {
 
   loading.value = true
   try {
-    const result:any = await products.variants.create({
+    const result: any = await products.variants.create({
       product_id: props.product.id,
       name: newVariant.value.name,
       price_modifier: newVariant.value.price_modifier,
@@ -200,7 +209,7 @@ async function addProductToKit(product: Product) {
       return
     }
 
-    const result:any = await products.kits.addItem(props.product.id, product.id, 1)
+    const result: any = await products.kits.addItem(props.product.id, product.id, 1)
     if (result.success && result.data) {
       kitItemsList.value.push(result.data)
       kitSearchQuery.value = ''

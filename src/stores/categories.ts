@@ -113,6 +113,8 @@ export const useCategoriesStore = defineStore('categories', () => {
       loading.value = true
       error.value = null
 
+      // suppress typescript error
+
       const { data, error: updateError } = await supabase
         .from('categories')
         .update(updates)
@@ -220,7 +222,7 @@ export const useCategoriesStore = defineStore('categories', () => {
    */
   function unsubscribeFromChanges() {
     if (realtimeChannel.value) {
-      supabase.removeChannel(realtimeChannel.value)
+      supabase.removeChannel(realtimeChannel.value as RealtimeChannel)
       realtimeChannel.value = null
     }
   }

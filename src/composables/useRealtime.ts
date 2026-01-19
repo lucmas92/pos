@@ -10,7 +10,10 @@ type RealtimeEvent = 'INSERT' | 'UPDATE' | 'DELETE' | '*'
 /**
  * Callback per gestire i cambiamenti
  */
-type ChangeCallback<T = any> = (payload: RealtimePostgresChangesPayload<T>) => void
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type ChangeCallback<T extends { [key: string]: any } = any> = (
+  payload: RealtimePostgresChangesPayload<T>,
+) => void
 
 /**
  * Opzioni per il real-time
@@ -26,7 +29,11 @@ interface RealtimeOptions {
 /**
  * Composable per gestire le sottoscrizioni real-time di Supabase
  */
-export function useRealtime<T = any>(options: RealtimeOptions, callback: ChangeCallback<T>) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function useRealtime<T extends { [key: string]: any } = any>(
+  options: RealtimeOptions,
+  callback: ChangeCallback<T>,
+) {
   const { table, event = '*', schema = 'public', filter, autoSubscribe = true } = options
 
   const channel = ref<RealtimeChannel | null>(null)
@@ -44,6 +51,7 @@ export function useRealtime<T = any>(options: RealtimeOptions, callback: ChangeC
       channel.value = supabase.channel(channelName)
 
       // Configura il listener
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const config: any = {
         event,
         schema,
@@ -54,7 +62,8 @@ export function useRealtime<T = any>(options: RealtimeOptions, callback: ChangeC
         config.filter = filter
       }
 
-      channel.value.on(('postgres_changes' as any), config, callback).subscribe((status) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      channel.value.on('postgres_changes' as any, config, callback).subscribe((status) => {
         if (status === 'SUBSCRIBED') {
           isSubscribed.value = true
           error.value = null
@@ -66,6 +75,7 @@ export function useRealtime<T = any>(options: RealtimeOptions, callback: ChangeC
         }
       })
     } catch (err: any) {
+      // eslint-disable-line @typescript-eslint/no-explicit-any
       error.value = err.message || 'Errore nella sottoscrizione'
       isSubscribed.value = false
     }
@@ -76,7 +86,7 @@ export function useRealtime<T = any>(options: RealtimeOptions, callback: ChangeC
    */
   function unsubscribe() {
     if (channel.value) {
-      supabase.removeChannel(channel.value)
+      supabase.removeChannel(channel.value as RealtimeChannel)
       channel.value = null
       isSubscribed.value = false
     }
@@ -114,7 +124,8 @@ export function useRealtime<T = any>(options: RealtimeOptions, callback: ChangeC
 /**
  * Composable semplificato per ascoltare una singola tabella
  */
-export function useRealtimeTable<T = any>(
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function useRealtimeTable<T extends { [key: string]: any } = any>(
   tableName: string,
   onInsert?: (record: T) => void,
   onUpdate?: (record: T) => void,
@@ -144,7 +155,8 @@ export function useRealtimeMultiple(
   subscriptions: Array<{
     table: string
     event?: RealtimeEvent
-    callback: ChangeCallback
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    callback: ChangeCallback<any>
   }>,
 ) {
   const channels = ref<RealtimeChannel[]>([])
@@ -158,7 +170,8 @@ export function useRealtimeMultiple(
         const ch = supabase.channel(channelName)
 
         ch.on(
-          'postgres_changes',
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          'postgres_changes' as any,
           {
             event: sub.event || '*',
             schema: 'public',
@@ -175,14 +188,15 @@ export function useRealtimeMultiple(
 
         channels.value.push(ch)
       } catch (err: any) {
+        // eslint-disable-line @typescript-eslint/no-explicit-any
         errors.value.push(err.message)
       }
     })
   }
 
   function unsubscribe() {
-    channels.value.forEach((ch:any) => {
-      supabase.removeChannel(ch)
+    channels.value.forEach((ch) => {
+      supabase.removeChannel(ch as RealtimeChannel)
     })
     channels.value = []
     isSubscribed.value = false

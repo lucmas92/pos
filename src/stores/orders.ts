@@ -166,7 +166,9 @@ export const useOrdersStore = defineStore('orders', () => {
   /**
    * Ottiene un ordine per ID
    */
-  async function fetchOrderById(id: string):Promise<{ success: boolean; data?: Order; error?: string }> {
+  async function fetchOrderById(
+    id: string,
+  ): Promise<{ success: boolean; data?: Order; error?: string }> {
     try {
       loading.value = true
       error.value = null
@@ -201,7 +203,9 @@ export const useOrdersStore = defineStore('orders', () => {
   /**
    * Ottiene un ordine per numero ordine
    */
-  async function fetchOrderByNumber(orderNumber: number):Promise<{ success: boolean; data?: Order; error?: string }> {
+  async function fetchOrderByNumber(
+    orderNumber: number,
+  ): Promise<{ success: boolean; data?: Order; error?: string }> {
     try {
       loading.value = true
       error.value = null
@@ -464,7 +468,7 @@ export const useOrdersStore = defineStore('orders', () => {
    */
   function unsubscribeFromChanges() {
     if (realtimeChannel.value) {
-      supabase.removeChannel(realtimeChannel.value)
+      supabase.removeChannel(realtimeChannel.value as RealtimeChannel)
       realtimeChannel.value = null
     }
   }

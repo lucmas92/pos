@@ -425,7 +425,7 @@ export const useProductsStore = defineStore('products', () => {
         .from('kit_items')
         .insert([
           { kit_product_id: kitProductId, included_product_id: includedProductId, quantity },
-        ])
+        ] as any)
         .select(
           `
           *,

@@ -179,7 +179,7 @@ export const useCartStore = defineStore('cart', () => {
     if (newQuantity <= 0) {
       removeItem(index)
     } else {
-      items!.value[index]!.quantity = newQuantity
+      items.value[index]!.quantity = newQuantity
       saveCart()
     }
   }

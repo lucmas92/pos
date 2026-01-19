@@ -334,10 +334,17 @@ onMounted(() => {
     <div
       class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 safe-area-inset-bottom"
     >
-        <AppButton @click="handleSubmit" class="mb-6" :disabled="!canSubmit" variant="primary" size="lg" block>
-          <LoadingSpinner v-if="isSubmitting" size="sm" color="text-white" class="mr-2" />
-          <span v-else> Conferma Ordine - {{ formatCurrency(total) }} </span>
-        </AppButton>
+      <AppButton
+        @click="handleSubmit"
+        class="mb-6"
+        :disabled="!canSubmit"
+        variant="primary"
+        size="lg"
+        block
+      >
+        <LoadingSpinner v-if="isSubmitting" size="sm" color="text-white" class="mr-2" />
+        <span v-else> Conferma Ordine - {{ formatCurrency(total) }} </span>
+      </AppButton>
     </div>
   </div>
 </template>
