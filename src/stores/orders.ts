@@ -264,9 +264,6 @@ export const useOrdersStore = defineStore('orders', () => {
         notes: item.notes || '',
       }))
 
-      console.log('Payload ordine:', orderItemsPayload)
-
-      debugger
       // Chiamata RPC a Supabase
       const { data, error } = await supabase.rpc('create_order_transaction', {
         p_guest_name: orderData.guest_name || null,
@@ -289,9 +286,6 @@ export const useOrdersStore = defineStore('orders', () => {
         items: orderItemsPayload,
         total: orderData.total_amount,
       })
-
-      console.log('Ordine creato con successo:', fullOrder)
-      debugger
 
       return { success: true, data: fullOrder }
     } catch (err: any) {
