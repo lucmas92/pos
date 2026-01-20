@@ -1,13 +1,15 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute } from 'vue-router'
 import { useOrders } from '@/composables/useOrders'
+import { useScanner } from '@/composables/useScanner'
+import { useToast } from '@/composables/useToast'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import type { Order } from '@/types/models'
 
 const route = useRoute()
-const router = useRouter()
 const orders = useOrders({ autoFetch: true, realtime: true })
+const toast = useToast()
 
 // Filtra solo gli ordini "paid" (pagati e pronti per la cucina)
 const kitchenOrders = computed(() => {
@@ -60,15 +62,22 @@ const groupedItems = computed(() => {
 const loading = computed(() => orders.loading.value)
 const isFullscreen = computed(() => route.query.fullscreen === 'true')
 const viewMode = ref<'orders' | 'items'>('orders') // 'orders' = vista classica, 'items' = vista raggruppata
+const manualInput = ref('')
 
 // Methods
 async function handleCompleteOrder(order: Order) {
   if (!confirm(`Completare l'ordine #${order.order_number}?`)) return
-  await orders.updateStatus(order.id, 'completed')
+  await completeOrder(order)
 }
 
-function goToScan() {
-  router.push('/manager/scan')
+async function completeOrder(order: Order) {
+  try {
+    await orders.updateStatus(order.id, 'completed')
+    toast.success(`Ordine #${order.order_number} completato!`)
+  } catch (e) {
+    console.error(e)
+    toast.error(`Errore nel completamento dell'ordine #${order.order_number}`)
+  }
 }
 
 // Calcola il tempo trascorso dall'ordine
@@ -87,6 +96,71 @@ function getTimeElapsed(dateString: string) {
 // Aggiorna il tempo trascorso ogni minuto
 const now = ref(new Date())
 let timer: number
+
+async function processScannedCode(code: string) {
+  const cleanCode = code.trim()
+  if (!cleanCode) return
+
+  // Try to find by UUID first, then by order number
+  let orderToComplete = orders.orders.value.find((o) => o.id === cleanCode)
+
+  if (!orderToComplete) {
+    // Try parsing as number
+    const orderNum = parseInt(cleanCode, 10)
+    if (!isNaN(orderNum)) {
+      orderToComplete = orders.orders.value.find((o) => o.order_number === orderNum)
+    }
+  }
+
+  if (orderToComplete) {
+    if (orderToComplete.status === 'paid') {
+      await completeOrder(orderToComplete)
+    } else {
+      toast.warning(
+        `Ordine #${orderToComplete.order_number} non è in stato 'paid' (Stato: ${orderToComplete.status})`,
+      )
+    }
+  } else {
+    toast.error(`Ordine non trovato: ${cleanCode}`)
+  }
+}
+
+async function handleManualInput() {
+  await processScannedCode(manualInput.value)
+  manualInput.value = ''
+}
+
+// --- DEBUG / TEST FUNCTION ---
+// Simula la digitazione rapida (come uno scanner)
+async function simulateScannerInput() {
+  // Prende il primo ordine disponibile per il test
+  const targetOrder = kitchenOrders.value[0]
+  if (!targetOrder) {
+    toast.info('Nessun ordine da testare')
+    return
+  }
+
+  const textToType = targetOrder.id.toString()
+  const delayMs = 49 // 20ms è veloce, simula scanner. >50ms verrebbe ignorato da useScanner
+
+  console.log(`[DEBUG] Simulazione scanner per ordine #${textToType}...`)
+
+  // Assicuriamoci che il focus non sia sull'input manuale, altrimenti useScanner ignora
+  if (document.activeElement instanceof HTMLElement) {
+    document.activeElement.blur()
+  }
+
+  for (const char of textToType) {
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: char }))
+    await new Promise((r) => setTimeout(r, delayMs))
+  }
+  window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }))
+}
+
+// Scanner Integration
+useScanner((code) => {
+  processScannedCode(code)
+})
 
 onMounted(() => {
   timer = setInterval(() => {
@@ -115,21 +189,41 @@ onUnmounted(() => {
       </div>
 
       <div class="flex items-center gap-4">
-        <!-- Scan Button -->
+        <!-- DEBUG BUTTON -->
         <button
-          @click="goToScan"
-          class="px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg text-white font-bold flex items-center gap-2 transition-colors border border-gray-600"
+          v-if="kitchenOrders.length > 0"
+          @click="simulateScannerInput"
+          class="px-3 py-2 bg-purple-900/50 hover:bg-purple-800 text-purple-200 text-xs font-mono rounded border border-purple-700 transition-colors"
+          title="Simula la scansione del primo ordine in lista"
         >
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"
-            />
-          </svg>
-          Scansiona
+          ⚡ Test Scanner
         </button>
+
+        <!-- Scan Input -->
+        <div class="relative">
+          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <svg
+              class="w-5 h-5 text-gray-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"
+              />
+            </svg>
+          </div>
+          <input
+            v-model="manualInput"
+            @keyup.enter="handleManualInput"
+            type="text"
+            class="bg-gray-800 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 p-2.5 placeholder-gray-400 w-64"
+            placeholder="Scan or Type Order #"
+          />
+        </div>
 
         <!-- View Toggle -->
         <div class="bg-gray-800 p-1 rounded-lg flex">
